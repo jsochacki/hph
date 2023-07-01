@@ -1,0 +1,759 @@
+# Vanilla Markdown Snippets
+
+snippet comment "Insert A Comment" b
+
+[//]: # ($1)
+
+$0
+endsnippet
+
+snippet centertext "Center the text" b
+\begin{center}
+$0
+\end{center}
+endsnippet
+
+snippet lequation "Referencable Latex Equation" b
+\begin{center}
+\begin{equation}
+$0 
+\label{eq:$1}
+\end{equation}
+\end{center}
+endsnippet
+
+snippet table "Table" b
+
++-------------------------+-------------------------+-------------------------+
+| $2                      | $3                      | $4                      |
++:=======================:+:=======================:+:=======================:+
+|                         |                         |                         |
+|                         |                         |                         |
++-------------------------+-------------------------+-------------------------+
+|                         |                         |                         |
++-------------------------+-------------------------+-------------------------+
+|                         |                         |                         |
++-------------------------+-------------------------+-------------------------+
+|                         |                         |                         |
++-------------------------+-------------------------+-------------------------+
+
+Table:  $1
+
+endsnippet
+
+snippet tablebasic "Basic Markdown Table" b
+
+|  $2  |  $3   |  $4  |
+| :--  | :--:  | --:  |
+|  $0  |       |      |
+|      |       |      |
+
+Table:  $1
+
+endsnippet
+
+snippet list "Un Numbered List" b
+- $1
+- $2
+- $0
+endsnippet
+
+snippet numlist "Numbered List" b
+1. $1
+2. $2
+3. $0
+endsnippet
+
+snippet q1 "Level 1 Quote" b
+> $0
+endsnippet
+
+snippet q2 "Level 2 Quote" b
+> > $0
+endsnippet
+
+snippet ql1 "Level 1 Quoted List" b
+> - $1
+> - $2
+> - $0
+endsnippet
+
+snippet ql2 "Level 2 Quoted List" b
+> > - $1
+> > - $2
+> > - $0
+endsnippet
+
+snippet formatted "Make look exacly like you are typing it to look" b
+  $0
+endsnippet
+
+snippet cs "Code Snip" b
+\`$0\`
+endsnippet
+
+snippet cb "Code Block" b
+\`\`\`
+$0
+\`\`\`
+endsnippet
+
+snippet cbc "Code Block For C" b
+\`\`\`c
+$0
+\`\`\`
+endsnippet
+
+snippet cbcpp "Code Block For Cpp" b
+\`\`\`cpp
+$0
+\`\`\`
+endsnippet
+
+snippet cblatex "Code Block For LaTeX" b
+\`\`\`tex
+$0
+\`\`\`
+endsnippet
+
+# Issue here is it bashes the clipboard with section title
+#snippet "hl([1-6])" "Header Level N" brA
+#`!p snip.rv = int(match.group(1))*'#'` ${1: Section Title}
+#
+#$0
+#endsnippet
+
+snippet hl1 "Header Level 1" bA
+# $0
+endsnippet
+
+snippet hl2 "Header Level 2" bA
+## $0
+endsnippet
+
+snippet hl3 "Header Level 3" bA
+### $0
+endsnippet
+
+snippet hl4 "Header Level 4" bA
+#### $0
+endsnippet
+
+snippet hl5 "Header Level 5" bA
+##### $0
+endsnippet
+
+snippet hl6 "Header Level 6" bA
+###### $0
+endsnippet
+
+snippet refsecs "Insert Section Reference" A
+[$1] $0
+endsnippet
+
+snippet refsecc "Insert Section Reference Custom Name" A
+[$1](#$2) $0
+endsnippet
+
+snippet mkfn "Define Footnote" A
+[${1:^FooterNum}]: ${2:Note}
+$0
+endsnippet
+
+snippet reffn "Insert Footnote Reference" A
+[${1:^FooterNum}]$0
+endsnippet
+
+snippet mkref "Make a Reference" A
+[${1:RefNum}]: ${2:LinkOrImagePath} ${3:"Hover Text"}
+$0
+endsnippet
+
+snippet reflinkref "Insert a Reference To a Link" A
+[${1:Text}][${2:RefNum}] $0
+endsnippet
+
+snippet refimgref "Insert an Reference To An Image" A
+![${1:Text}][${2:RefNum}] $0
+endsnippet
+
+snippet mkabbr "Define Abbreviation" A
+*[${1:Abbreviation}]: ${2:Definition}
+$0
+endsnippet
+
+snippet mkdeflist "Define Definition List" A
+$1
+:  $0
+endsnippet
+
+snippet img "Insert Image"
+![${2:DisplayName}](${1:ImagePath}){width="${3:4}in"}
+$0
+endsnippet
+
+snippet imgp "Insert Image plus hover text"
+![${2:DisplayName}](${1:ImagePath} ${3:"Hover Text"}){width="${4:4}in"}
+$0
+endsnippet
+
+snippet imgf "Insert Image Fast"
+![${1/\W+/ /gi}](images/$1)
+$0
+endsnippet
+
+snippet link "Insert Link"
+[${1:DisplayName}](${2:Link} ${3:"Hover Text"})
+$0
+endsnippet
+
+snippet ilinkedimg "Insert a Linked Image Inline" A
+[![${1:DisplayName}](${2:ImagePath})](${3:Link} ${4:"Hover Text"}){width="${5:4}in"}
+$0
+endsnippet
+
+snippet un "Underline"
+[$1]{.ul}$0
+endsnippet
+
+snippet it "Italic"
+*$1*$0
+endsnippet
+
+snippet bo "Bold"
+**$1**$0
+endsnippet
+
+snippet strike "Strike Through"
+~~$1~~$0
+endsnippet
+
+snippet task "Task List" b
+
+- [x] ${1:Task1}
+- [ ] ${2:Task2}
+- [ ] ${3:Task3}
+
+$0
+endsnippet
+
+snippet eol "End Of List" b
+
+<!-- end of list -->
+
+$0
+endsnippet
+
+# Pandoc LaTeX non math Specific Markdown Snippets
+
+# Ultisnips are ${VISUAL:default/search/replace/options}
+# with no default that becomes ${VISUAL/search/replace/options}
+snippet limgfr "Insert Referencable Image Fast"
+![${4:${3/\w+\s*/\u$0/g}}
+$6\label{fig:${1/\.(\w{3,})$//gi}}]
+$7(images/$1){width="${5:4}in"}
+$0 ${3:${2/\W+/ /gi}} ${2:${1/\.(\w{3,})$//gi}}
+endsnippet
+
+snippet limgfrs "Insert Referencable Image Fast Safe"
+![${1/\W+/ /gi}$2\label{fig:${1/\.(\w{3,})$//gi}}](images/$1){width="${3:4}in"}
+$0
+endsnippet
+
+snippet ltabler "Referenceable Table" b
+
++-------------------------+-------------------------+-------------------------+
+| $2                      | $3                      | $4                      |
++:=======================:+:=======================:+:=======================:+
+|                         |                         |                         |
+|                         |                         |                         |
++-------------------------+-------------------------+-------------------------+
+|                         |                         |                         |
++-------------------------+-------------------------+-------------------------+
+|                         |                         |                         |
++-------------------------+-------------------------+-------------------------+
+|                         |                         |                         |
++-------------------------+-------------------------+-------------------------+
+
+Table: $1
+\label{tab:${1/\W+/-/g}}
+
+endsnippet
+
+snippet lsod "Start Of Document" b
+---
+title: ${1:Title}
+author: ${2:Author}
+header-includes:
+   - \usepackage{systems_book_md}
+   - \setheaderandfooter{${3:$2}}{${4:0.0}}
+---
+
+\maketoc
+
+$0
+endsnippet
+
+snippet lpb "Insert pagebreak that leaves whitespace at the bottom of the page" b
+
+\newpage
+
+$0
+endsnippet
+
+snippet lpbs "Insert pagebreak that expands items on page to take entire page" b
+
+\pagebreak
+
+$0
+endsnippet
+
+
+snippet lsodwdate "Start Of Document With Date But Will Cause PPTX Requires Repair Error Upon Opening In Windows" b
+---
+title: ${1:Title}
+author: ${2:Author}
+date: ${3:Date}
+header-includes:
+   - \usepackage{systems_book_md}
+   - \setheaderandfooter{${4:$2}}{${5:0.0}}
+---
+
+\maketoc
+
+$0
+endsnippet
+
+# The rest of this section wont show up in pptxs
+snippet lutableimgr "Referenceable Image Based Table with Caption After Table" b
+
+\begin{table}[${1:H}]
+\begin{center}
+	\incimg$2{$3}
+	\caption{${4:${3/\W+/ /g}}}
+	\label{tab:${5:$3}}
+\end{center}
+\end{table}
+
+$0
+endsnippet
+
+snippet lutablefigr "Referenceable Figure Based Table with Caption After Table" b
+
+\begin{table}[${1:H}]
+\begin{center}
+	\incfig$2{$3}
+	\caption{${4:${3/\W+/ /g}}}
+	\label{tab:${5:$3}}
+\end{center}
+\end{table}
+
+$0
+endsnippet
+
+snippet lureffig "insert a figure reference"
+Figure \ref{fig:$1}$0
+endsnippet
+
+snippet lureffigpage "insert a figure page number reference"
+ \pageref{fig:$1}$0
+endsnippet
+
+snippet lureftab "insert a table reference"
+Table \ref{tab:$1}$0
+endsnippet
+
+snippet lureftabpage "insert a table page number reference"
+ \pageref{tab:$1}$0
+endsnippet
+
+# should be lower case like Appendix \ref{appendix:a}
+snippet lurefapp "insert an appendix reference"
+Appendix \ref{appendix:$1}$0
+endsnippet
+
+snippet lurefeq "insert an equation reference"
+Equation \ref{eq:$1}$0
+endsnippet
+
+snippet lurefeqpage "insert an equation page number reference"
+ \pageref{eq:$1}$0
+endsnippet
+
+# Avoid using these when possible as they don't serve much purpose on their own
+# and are dealt with above with figures and tables in a cohesive way that works
+# better
+snippet lumkfig "Make Figure Label"
+\label{fig:$1}$0
+endsnippet
+
+snippet lumktab "Make Table Label"
+\label{tab:$1}$0
+endsnippet
+
+# SHould be lower case like \label{appendix:a}
+snippet lumkapp "Make an appendix reference"
+\label{appendix:$1}
+$0
+endsnippet
+
+snippet lumkeq "Make Equation Label"
+\label{eq:$1}$0
+endsnippet
+
+# Pandoc LaTeX math Specific Markdown Snippets
+
+# This whole section will show up in pptxs
+snippet lunnim "No Number Inline Math" wA
+$${1}$`!p
+if t[2] and t[2][0] not in [',', '.', '?', '-', ' ']:
+	snip.rv = ' '
+else:
+	snip.rv = ''
+`$2
+endsnippet
+
+snippet lunmm "Numbered Multirow Math" bA
+\begin{center}
+\begin{align}
+   &$1 \\\\${2:[10pt]}
+   &$0.
+\end{align}
+\end{center}
+endsnippet
+
+snippet lunse "Numbered Single Row Equation" bA
+\begin{center}
+\begin{equation}
+   $0
+\end{equation}
+\end{center}
+endsnippet
+
+# Pandoc LaTeX Power Point Specific Markdown Snippets
+
+snippet pptnotes "Power Point Speakers Notes" bA
+::: notes
+
+$1
+
+:::
+$0
+endsnippet
+
+snippet pptilist "Power Point Incremental Un Numbered List" bA
+::: incremental
+
+- $1
+- $2
+- $0
+
+:::
+endsnippet
+
+snippet pptlist "Power Point Non-Incremental Un Numbered List" bA
+::: nonincremental
+
+- $1
+- $2
+- $0
+
+:::
+endsnippet
+
+snippet pptinumlist "Power Point Incremental Numbered List" bA
+::: incremental
+
+1. $1
+2. $2
+3. $0
+
+:::
+endsnippet
+
+snippet pptnumlist "Power Point Non-Incremental Numbered List" bA
+::: nonincremental
+
+1. $1
+2. $2
+3. $0
+
+:::
+endsnippet
+
+snippet pptcols "Power Point Content In Columns with auto list" bA
+:::::::::::::: {.columns}
+::: {.column}
+
+::: nonincremental
+
+- $0
+
+:::
+
+:::
+::: {.column}
+
+$1
+
+:::
+::::::::::::::
+endsnippet
+
+snippet pptblankcols "Power Point Content In Columns" bA
+:::::::::::::: {.columns}
+::: {.column}
+$1
+:::
+::: {.column}
+$0
+:::
+::::::::::::::
+endsnippet
+
+snippet pptfns "Power Point Force New Slide" bA
+
+------------------
+
+$0
+endsnippet
+
+snippet ppttitle "Power Point Title slide" bA
+% ${1:Title}
+% ${2:Author}
+% ${3:Date}
+
+$0
+endsnippet
+
+snippet pptpause "Power Point Pause" bA
+
+. . .
+
+$0
+endsnippet
+
+snippet pptsn "Power Point Speaker Notes" bA
+::: notes
+
+$0
+
+:::
+endsnippet
+
+# Pandoc LaTeX beamer, Slidy, s5, etc... Specific Markdown Snippits
+
+snippet pptccols "Power Point Content In Columns With Custom Width" bA
+:::::::::::::: {.columns}
+::: {.column width="${1:50}%"}
+$3
+:::
+::: {.column width="${2:50}%"}
+$0
+:::
+::::::::::::::
+endsnippet
+
+snippet pptccolstw "Power Point Content In Columns With Additional Options Text Width Columns" bA
+:::::::::::::: {.columns align=top .onlytextwidth}
+::: {.column width="${1:50}%" align=${3:center}}
+$4
+:::
+::: {.column width="${2:50}%" align=${3:center}}
+$0
+:::
+::::::::::::::
+endsnippet
+
+snippet pptccolscw "Power Point Content In Columns With Additional Options Custom Width Columns" bA
+:::::::::::::: {.columns align=center totalwidth=8em}
+::: {.column width="${1:50}%" align=${3:bottom}}
+$4
+:::
+::: {.column width="${2:50}%" align=${3:bottom}}
+$0
+:::
+::::::::::::::
+endsnippet
+
+snippet pptssbi "Power Point Set Single Slide Backround Image" bA
+## ${1:HeadingText} {data-background-image="${2:PathToImage}"}
+$0
+endsnippet
+
+snippet ppttheme "Power Point Title slide With Theme Definition" bA
+% ${1:Title}
+% ${2:Author}
+% ${3:Date}
+
+---
+output: 
+  powerpoint_presentation:
+    reference_doc: template.pptx
+    % ${4:slide_level: 3 # use this to override default}
+---
+
+$0
+endsnippet
+
+snippet ppttitlewimg "Power Point Title slide With Background Image Definition" bA
+% ${1:Title}
+% ${2:Author}
+% ${3:Date}
+
+---
+parallaxBackgroundImage: ${4:PathToBackgroundImage}
+title-slide-attributes:
+    data-background-image: ${5:PathToTitleImage}
+    data-background-size: contain
+---
+
+$0
+endsnippet
+
+snippet ppttitlewimg2 "Power Point Title slide With Background Image Definition v2" bA
+---
+title: ${1:Title}
+author: ${2:Author}
+date: ${3:Date}
+parallaxBackgroundImage: ${4:PathToBackgroundImage}
+title-slide-attributes:
+    data-background-image: ${5:PathToTitleImage}
+    data-background-size: contain
+---
+
+$0
+endsnippet
+
+snippet mmdb "Inserting a Blank Mermaid Diagram" bA
+~~~{.mermaid format=pdf}
+$0
+~~~
+endsnippet
+
+snippet mmdf "Inserting a Flow Mermaid Diagram" bA
+~~~{.mermaid format=pdf}
+graph TD
+    A[Christmas] -->|Get money| B(Go shopping)
+    B --> C{Let me think}
+    C -->|One| D[Laptop]
+    C -->|Two| E[iPhone]
+    C -->|Three| F[fa:fa-car Car]
+$0
+~~~
+endsnippet
+
+snippet mmds "Inserting a Sequence Mermaid Diagram" bA
+~~~{.mermaid format=pdf}
+sequenceDiagram
+    Alice->>+John: Hello John, how are you?
+    Alice->>+John: John, can you hear me?
+    John-->>-Alice: Hi Alice, I can hear you!
+    John-->>-Alice: I feel great!
+$0
+~~~
+endsnippet
+
+snippet mmdc "Inserting a Class Mermaid Diagram" bA
+~~~{.mermaid format=pdf}
+classDiagram
+    Animal <|-- Duck
+    Animal <|-- Fish
+    Animal <|-- Zebra
+    Animal : +int age
+    Animal : +String gender
+    Animal: +isMammal()
+    Animal: +mate()
+    class Duck{
+      +String beakColor
+      +swim()
+      +quack()
+    }
+    class Fish{
+      -int sizeInFeet
+      -canEat()
+    }
+    class Zebra{
+      +bool is_wild
+      +run()
+    }
+$0
+~~~
+endsnippet
+
+snippet mmdt "Inserting a State Mermaid Diagram" bA
+~~~{.mermaid format=pdf}
+stateDiagram-v2
+    [*] --> Still
+    Still --> [*]
+    Still --> Moving
+    Moving --> Still
+    Moving --> Crash
+    Crash --> [*]
+$0
+~~~
+endsnippet
+
+snippet mmda "Inserting a Gantt Mermaid Diagram" bA
+~~~{.mermaid format=pdf}
+gantt
+    title A Gantt Diagram
+    dateFormat  YYYY-MM-DD
+    section Section
+    A task           :a1, 2014-01-01, 30d
+    Another task     :after a1  , 20d
+    section Another
+    Task in sec      :2014-01-12  , 12d
+    another task      : 24d
+$0
+~~~
+endsnippet
+
+snippet mmdp "Inserting a Pie Mermaid Diagram" bA
+~~~{.mermaid format=pdf}
+pie title Pets adopted by volunteers
+    "Dogs" : 386
+    "Cats" : 85
+    "Rats" : 15
+$0
+~~~
+endsnippet
+
+snippet mmde "Inserting an ER Mermaid Diagram" bA
+~~~{.mermaid format=pdf}
+erDiagram
+          CUSTOMER }|..|{ DELIVERY-ADDRESS : has
+          CUSTOMER ||--o{ ORDER : places
+          CUSTOMER ||--o{ INVOICE : "liable for"
+          DELIVERY-ADDRESS ||--o{ ORDER : receives
+          INVOICE ||--|{ ORDER : covers
+          ORDER ||--|{ ORDER-ITEM : includes
+          PRODUCT-CATEGORY ||--|{ PRODUCT : contains
+          PRODUCT ||--o{ ORDER-ITEM : "ordered in"
+$0
+~~~
+endsnippet
+
+snippet mmdg "Inserting a Graph Mermaid Diagram" bA
+~~~{.mermaid format=pdf}
+gitGraph:
+options
+{
+    "nodeSpacing": 150,
+    "nodeRadius": 10
+}
+end
+commit
+branch newbranch
+checkout newbranch
+commit
+commit
+checkout master
+commit
+commit
+merge newbranch
+$0
+~~~
+endsnippet
+
+# vim:ft=snippets

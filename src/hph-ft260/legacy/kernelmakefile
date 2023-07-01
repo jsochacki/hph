@@ -1,0 +1,10 @@
+KRELEASE ?= $(shell uname -r)
+KBUILD ?= /lib/modules/$(KRELEASE)/build
+obj-m += hph-ft260.o
+EXTRA_CFLAGS=-I/usr/include
+
+all:
+	$(MAKE) -C $(KBUILD) M=$(PWD) modules
+
+clean:
+	$(MAKE) -C $(KBUILD) M=$(PWD) clean

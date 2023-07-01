@@ -1,0 +1,1018 @@
+global !p
+texMathZones = ['texMathZone' + x for x in ['A', 'AS', 'B', 'BS', 'C', 'CS', 'D', 'DS', 'E', 'ES', 'F', 'FS', 'G', 'GS', 'H', 'HS', 'I', 'IS', 'J', 'JS', 'K', 'KS', 'L', 'LS', 'DS', 'V', 'W', 'X', 'Y', 'Z', 'AmsA', 'AmsB', 'AmsC', 'AmsD', 'AmsE', 'AmsF', 'AmsG', 'AmsAS', 'AmsBS', 'AmsCS', 'AmsDS', 'AmsES', 'AmsFS', 'AmsGS' ]]
+
+texIgnoreMathZones = ['texMathText']
+
+texMathZoneIds = vim.eval('map('+str(texMathZones)+", 'hlID(v:val)')")
+texIgnoreMathZoneIds = vim.eval('map('+str(texIgnoreMathZones)+", 'hlID(v:val)')")
+
+ignore = texIgnoreMathZoneIds[0]
+
+def math():
+	synstackids = vim.eval("synstack(line('.'), col('.') - (col('.')>=2 ? 1 : 0))")
+	try:
+		first = next(i for i in reversed(synstackids) if i in texIgnoreMathZoneIds or i in texMathZoneIds)
+		return first != ignore
+	except StopIteration:
+		return False
+endglobal
+
+snippet beg "begin{} / end{}" bA
+\\begin{$1}
+	$0
+\\end{$1}
+endsnippet
+
+snippet deflist "Definition List" b
+\begin{description}
+  \item[$1] \hfill \\ $4
+  \item[$2] \hfill \\ $5
+  \item[$3] \hfill \\ $6
+\end{description}
+endsnippet
+
+snippet fig "Figure environment" b
+\begin{figure}[${1:H}]
+	\centering
+	\incfig$2{$3}
+	\caption{${4:$3}}
+	\label{fig:${5:${3/\W+/-/g}}}
+\end{figure}
+endsnippet
+
+snippet img "Image environment" b
+\begin{figure}[${1:H}]
+	\centering
+	\incimg$2{$3.png}
+	\caption{${4:$3}}
+	\label{fig:${5:${3/\W+/-/g}}}
+\end{figure}
+endsnippet
+
+snippet enum "Enumerate" b
+\begin{enumerate}
+	\\item $1
+	\\item $2
+	\\item $3
+	\\item $0
+\end{enumerate}
+endsnippet
+
+snippet item "Itemize" b
+\begin{itemize}
+	\\item $1
+	\\item $2
+	\\item $3
+	\\item $0
+\end{itemize}
+endsnippet
+
+snippet desc "Description" b
+\begin{description}
+	\\item[$1] $0
+\end{description}
+endsnippet
+
+snippet pac "Package" b
+\usepackage[${1:options}]{${2:package}}$0
+endsnippet
+
+snippet => "implies" Ai
+\implies
+endsnippet
+
+snippet =< "implied by" Ai
+\impliedby
+endsnippet
+
+context "math()"
+snippet iff "iff" Ai
+\iff
+endsnippet
+
+snippet nnim "No Number Inline Math" wA
+$${1}$`!p
+if t[2] and t[2][0] not in [',', '.', '?', '-', ' ']:
+	snip.rv = ' '
+else:
+	snip.rv = ''
+`$2
+endsnippet
+
+snippet nmm "Numbered Multirow Math" bA
+\begin{center}
+\begin{align}
+	$0
+\end{align}
+\end{center}
+endsnippet
+
+snippet nse "Numbered Single Row Equation" bA
+\begin{center}
+\begin{equation}
+	$0
+\end{equation}
+\end{center}
+endsnippet
+
+snippet nndm "No Number Display Math (same as \begin{align*}" bA
+\[
+${1:${VISUAL}}
+.\] $0
+endsnippet
+
+context "math()"
+snippet // "Fraction" iA
+\\frac{$1}{$2}$0
+endsnippet
+
+snippet / "Fraction" i
+\\frac{${VISUAL}}{$1}$0
+endsnippet
+
+context "math()"
+snippet '((\d+)|(\d*)(\\)?([A-Za-z]+)((\^|_)(\{\d+\}|\d))*)/' "symbol frac" wrA
+\\frac{`!p snip.rv = match.group(1)`}{$1}$0
+endsnippet
+
+priority 1000
+context "math()"
+snippet '^.*\)/' "() frac" wrA
+`!p
+stripped = match.string[:-1]
+depth = 0
+i = len(stripped) - 1
+while True:
+	if stripped[i] == ')': depth += 1
+	if stripped[i] == '(': depth -= 1
+	if depth == 0: break;
+	i-=1
+snip.rv = stripped[0:i] + "\\frac{" + stripped[i+1:-1] + "}"
+`{$1}$0
+endsnippet
+
+context "math()"
+snippet '([A-Za-z])(\d)' "auto subscript" wrA
+`!p snip.rv = match.group(1)`_`!p snip.rv = match.group(2)`
+endsnippet
+
+context "math()"
+snippet '([A-Za-z])_(\d\d)' "auto subscript2" wrA
+`!p snip.rv = match.group(1)`_{`!p snip.rv = match.group(2)`}
+endsnippet
+
+
+snippet sympy "sympyblock " w
+sympy $1 sympy$0
+endsnippet
+
+priority 10000
+snippet 'sympy(.*)sympy' "sympy" wr
+`!p
+from sympy import *
+x, y, z, t = symbols('x y z t')
+k, m, n = symbols('k m n', integer=True)
+f, g, h = symbols('f g h', cls=Function)
+init_printing()
+snip.rv = eval('latex(' + match.group(1).replace('\\', '').replace('^', '**').replace('{', '(').replace('}', ')') + ')')
+`
+endsnippet
+
+priority 1000
+snippet math "mathematicablock" w
+math $1 math$0
+endsnippet
+
+priority 10000
+snippet 'math(.*)math' "math" wr
+`!p
+import subprocess
+code = match.group(1)
+code = 'ToString[' + code + ', TeXForm]'
+snip.rv = subprocess.check_output(['wolframscript', '-code', code])
+`
+endsnippet
+
+snippet == "equals" iA
+&=$1
+endsnippet
+
+snippet != "equals" iA
+\neq 
+endsnippet
+
+context "math()"
+snippet ceil "ceil" iA
+\left\lceil $1 \right\rceil $0
+endsnippet
+
+context "math()"
+snippet floor "floor" iA
+\left\lfloor $1 \right\rfloor$0
+endsnippet
+
+snippet pmat "pmat" iA
+\begin{pmatrix} $1 \end{pmatrix} $0
+endsnippet
+
+snippet bmat "bmat" iA
+\begin{bmatrix} $1 \end{bmatrix} $0
+endsnippet
+
+context "math()"
+snippet () "left( right)" iA
+\left( ${1:${VISUAL}} \right) $0
+endsnippet
+
+snippet lr "left( right)" i
+\left( ${1:${VISUAL}} \right) $0
+endsnippet
+
+snippet lr( "left( right)" i
+\left( ${1:${VISUAL}} \right) $0
+endsnippet
+
+snippet lr| "left| right|" i
+\left| ${1:${VISUAL}} \right| $0
+endsnippet
+
+snippet lr{ "left\{ right\}" i
+\left\\{ ${1:${VISUAL}} \right\\} $0
+endsnippet
+
+snippet lrb "left\{ right\}" i
+\left\\{ ${1:${VISUAL}} \right\\} $0
+endsnippet
+
+snippet lr[ "left[ right]" i
+\left[ ${1:${VISUAL}} \right] $0
+endsnippet
+
+snippet lra "leftangle rightangle" iA
+\left<${1:${VISUAL}} \right>$0
+endsnippet
+
+context "math()"
+snippet conj "conjugate" iA
+\overline{$1}$0
+endsnippet
+
+snippet sum "sum" w
+\sum_{n=${1:1}}^{${2:\infty}} ${3:a_n z^n}
+endsnippet
+
+snippet taylor "taylor" w
+\sum_{${1:k}=${2:0}}^{${3:\infty}} ${4:c_$1} (x-a)^$1 $0
+endsnippet
+
+snippet lim "limit" w
+\lim_{${1:n} \to ${2:\infty}} 
+endsnippet
+
+snippet limsup "limsup" w
+\limsup_{${1:n} \to ${2:\infty}} 
+endsnippet
+
+snippet prod "product" w
+\prod_{${1:n=${2:1}}}^{${3:\infty}} ${4:${VISUAL}} $0
+endsnippet
+
+snippet part "d/dx" w
+\frac{\partial ${1:V}}{\partial ${2:x}} $0
+endsnippet
+
+context "math()"
+snippet sq "\sqrt{}" iA
+\sqrt{${1:${VISUAL}}} $0
+endsnippet
+
+context "math()"
+snippet sr "^2" iA
+^2
+endsnippet
+
+context "math()"
+snippet cb "^3" iA
+^3
+endsnippet
+
+context "math()"
+snippet pp "to the ... power" iA
+^{$1}$0
+endsnippet
+
+context "math()"
+snippet rd "to the ... power" iA
+^{($1)}$0
+endsnippet
+
+snippet __ "subscript" iA
+_{$1}$0
+endsnippet
+
+snippet ooo "\infty" iA
+\infty
+endsnippet
+
+snippet rij "mrij" i
+(${1:x}_${2:n})_{${3:$2}\\in${4:\\N}}$0
+endsnippet
+
+snippet <= "leq" iA
+\le 
+endsnippet
+
+snippet >= "geq" iA
+\ge 
+endsnippet
+
+context "math()"
+snippet EE "geq" iA
+\exists 
+endsnippet
+
+context "math()"
+snippet AA "forall" iA
+\forall 
+endsnippet
+
+context "math()"
+snippet xnn "xn" iA
+x_{n}
+endsnippet
+
+context "math()"
+snippet ynn "yn" iA
+y_{n}
+endsnippet
+
+
+context "math()"
+snippet xii "xi" iA
+x_{i}
+endsnippet
+
+context "math()"
+snippet yii "yi" iA
+y_{i}
+endsnippet
+
+context "math()"
+snippet xjj "xj" iA
+x_{j}
+endsnippet
+
+context "math()"
+snippet yjj "yj" iA
+y_{j}
+endsnippet
+
+context "math()"
+snippet xp1 "x" iA
+x_{n+1}
+endsnippet
+
+context "math()"
+snippet xmm "x" iA
+x_{m}
+endsnippet
+
+snippet R0+ "R0+" iA
+\\R_0^+
+endsnippet
+
+snippet plot "Plot" w
+\begin{figure}[${1:H}]
+	\centering
+	\begin{tikzpicture}
+		\begin{axis}[
+			xmin= ${2:-10}, xmax= ${3:10},
+			ymin= ${4:-10}, ymax = ${5:10},
+			axis lines = middle,
+		]
+			\addplot[domain=$2:$3, samples=${6:100}]{$7};
+		\end{axis}
+	\end{tikzpicture}
+	\caption{$8}
+	\label{${9:$8}}
+\end{figure}
+endsnippet
+
+snippet nn "Tikz node" w
+\node[$5] (${1/[^0-9a-zA-Z]//g}${2}) ${3:at (${4:0,0}) }{$${1}$};
+$0
+endsnippet
+
+context "math()"
+snippet mcal "mathcal" iA
+\mathcal{$1}$0
+endsnippet
+
+snippet lll "l" iA
+\ell
+endsnippet
+
+context "math()"
+snippet nabl "nabla" iA
+\nabla 
+endsnippet
+
+context "math()"
+snippet xx "cross" iA
+\times 
+endsnippet
+
+priority 100
+snippet ... "ldots" iA
+\ldots
+endsnippet
+
+priority 100
+snippet ^... "cdots" iA
+\cdots 
+endsnippet
+
+priority 100
+snippet |... "vdots" iA
+\vdots 
+endsnippet
+
+context "math()"
+snippet norm "norm" iA
+\|$1\|$0
+endsnippet
+
+priority 100
+context "math()"
+snippet '(?<!\\)(sin|cos|arccot|cot|csc|ln|log|exp|star|perp)' "ln" rwA
+\\`!p snip.rv = match.group(1)`
+endsnippet
+
+priority 300
+context "math()"
+snippet dint "integral" wA
+\int_{${1:-\infty}}^{${2:\infty}} ${3:${VISUAL}} $0
+endsnippet
+
+priority 200
+context "math()"
+snippet '(?<!\\)(arcsin|arccos|arctan|arccot|arccsc|arcsec|pi|zeta|int)' "ln" rwA
+\\`!p snip.rv = match.group(1)`
+endsnippet
+
+
+priority 100
+context "math()"
+snippet -> "to" iA
+\to 
+endsnippet
+
+priority 200
+context "math()"
+snippet <-> "leftrightarrow" iA
+\leftrightarrow
+endsnippet
+
+context "math()"
+snippet !> "mapsto" iA
+\mapsto 
+endsnippet
+
+context "math()"
+snippet invs "inverse" iA
+^{-1}
+endsnippet
+
+context "math()"
+snippet compl "complement" iA
+^{c}
+endsnippet
+
+context "math()"
+snippet \\\ "setminus" iA
+\setminus
+endsnippet
+
+snippet >> ">>" iA
+\gg
+endsnippet
+
+snippet << "<<" iA
+\ll
+endsnippet
+
+
+snippet ~~ "~" iA
+\sim 
+endsnippet
+
+snippet ~= "approximately" iA
+\approx 
+endsnippet
+
+context "math()"
+snippet set "set" wA
+\\{$1\\} $0
+endsnippet
+
+snippet || "mid" iA
+ \mid 
+endsnippet
+
+
+context "math()"
+snippet cc "subset" Ai
+\subset 
+endsnippet
+
+snippet notin "not in " iA
+\not\in 
+endsnippet
+
+context "math()"
+snippet inn "in " iA
+\in 
+endsnippet
+
+snippet NN "n" iA
+\N
+endsnippet
+
+snippet Nn "cap" iA
+\cap 
+endsnippet
+
+snippet UU "cup" iA
+\cup 
+endsnippet
+
+snippet uuu "bigcup" iA
+\bigcup_{${1:i \in ${2: I}}} $0
+endsnippet
+
+snippet nnn "bigcap" iA
+\bigcap_{${1:i \in ${2: I}}} $0
+endsnippet
+
+snippet OO "emptyset" iA
+\O
+endsnippet
+
+snippet RR "real" iA
+\R
+endsnippet
+
+snippet QQ "Q" iA
+\Q
+endsnippet
+
+snippet ZZ "Z" iA
+\Z
+endsnippet
+
+snippet <! "normal" iA
+\triangleleft 
+endsnippet
+
+snippet <> "hokje" iA
+\diamond 
+endsnippet
+
+
+context "math()"
+snippet '(?<!i)sts' "text subscript" irA
+_\text{$1} $0
+endsnippet
+
+context "math()"
+snippet tt "text" iA
+\text{$1}$0
+endsnippet
+
+context "math()"
+snippet case "cases" wA
+\begin{cases}
+	$1
+\end{cases}
+endsnippet
+
+snippet SI "SI" i
+\SI{$1}{$2}
+endsnippet
+
+snippet bigfun "Big function" iA
+\begin{align*}
+	$1: $2 &\longrightarrow $3 \\\\
+	$4 &\longmapsto $1($4) = $0
+.\end{align*}
+endsnippet
+
+snippet bcvec "column vector with brackets" A
+\begin{bmatrix} ${1:x}_${2:1}\\\\ \vdots\\\\ $1_${2:n} \end{bmatrix}
+endsnippet
+
+snippet pcvec "column vector with parenthesis" A
+\begin{pmatrix} ${1:x}_${2:1}\\\\ \vdots\\\\ $1_${2:n} \end{pmatrix}
+endsnippet
+
+snippet acvec "column vector with bars" A
+\begin{vmatrix} ${1:x}_${2:1}\\\\ \vdots\\\\ $1_${2:n} \end{vmatrix}
+endsnippet
+
+snippet brvec "row vector with brackets" A
+\begin{bmatrix} ${1:x}_${2:1} & \cdots & $1_${2:n} \end{bmatrix}
+endsnippet
+
+snippet prvec "row vector with parenthesis" A
+\begin{pmatrix} ${1:x}_${2:1} & \cdots & $1_${2:n} \end{pmatrix}
+endsnippet
+
+snippet arvec "row vector with bars" A
+\begin{vmatrix} ${1:x}_${2:1} & \cdots & $1_${2:n} \end{vmatrix}
+endsnippet
+
+priority 10
+context "math()"
+snippet "bar" "bar" riA
+\overline{$1}$0
+endsnippet
+
+priority 100
+context "math()"
+snippet "([a-zA-Z])bar" "bar" riA
+\overline{`!p snip.rv=match.group(1)`}
+endsnippet
+
+priority 10
+context "math()"
+snippet "hat" "hat" riA
+\hat{$1}$0
+endsnippet
+
+priority 100
+context "math()"
+snippet "([a-zA-Z])hat" "hat" riA
+\hat{`!p snip.rv=match.group(1)`}
+endsnippet
+
+snippet letw "let omega" iA
+Let $\Omega \subset \C$ be open.
+endsnippet
+
+
+snippet HH "H" iA
+\mathbb{H}
+endsnippet
+
+snippet DD "D" iA
+\mathbb{D}
+endsnippet
+
+snippet th0 "Heading Level 0" bs
+\part{$1}
+   $0
+endsnippet
+
+snippet tha0 "Heading Level 0 Alternate TOC text" bs
+\part[${2:Alternative TOC Value}]{$1}
+   $0
+endsnippet
+
+snippet th1 "Heading Level 1" bs
+\chapter{$1}
+   $0
+endsnippet
+
+snippet tha1 "Heading Level 1 Alternate TOC text" bs
+\chapter[${2:Alternative TOC Value}]{$1}
+   $0
+endsnippet
+
+snippet th2 "Heading Level 2" bs
+\section{$1}
+   $0
+endsnippet
+
+snippet tha2 "Heading Level 2 Alternate TOC text" bs
+\section[${2:Alternative TOC Value}]{$1}
+   $0
+endsnippet
+
+snippet th3 "Heading Level 3" bs
+\subsection{$1}
+   $0
+endsnippet
+
+snippet tha3 "Heading Level 3 Alternate TOC text" bs
+\subsection[${2:Alternative TOC Value}]{$1}
+   $0
+endsnippet
+
+snippet th4 "Heading Level 4" bs
+\subsubsection{$1}
+   $0
+endsnippet
+
+snippet tha4 "Heading Level 4 Alternate TOC text" bs
+\subsubsection[${2:Alternative TOC Value}]{$1}
+   $0
+endsnippet
+
+snippet th5 "Heading Level 5" bs
+\paragraph{$1}
+   $0
+endsnippet
+
+snippet tha5 "Heading Level 5 Alternate TOC text" bs
+\paragraph[${2:Alternative TOC Value}]{$1}
+   $0
+endsnippet
+
+snippet th6 "Heading Level 6" bs
+\subparagraph{$1}
+   $0
+endsnippet
+
+snippet tha6 "Heading Level 6 Alternate TOC text" bs
+\subparagraph[${2:Alternative TOC Value}]{$1}
+   $0
+endsnippet
+
+snippet table "table environment" b
+\begin{table}[${1:H}]
+\begin{center}
+\caption{$2}
+\label{tab:$2}
+\begin{tabular}[c]{|w{c}{4cm}|w{c}{4cm}|}
+	\hline
+	\multicolumn{2}{|c|}{$2} \\\
+	\hline
+	$0 \\\
+	\hline
+	D & E \\\
+	F & G \\\
+	\hline
+\end{tabular}
+\end{center}
+\end{table}
+endsnippet
+
+snippet multilt "multiline table entry"
+\begin{minipage}[c]{4cm}\begin{center}
+$1
+\end{center}\end{minipage}
+$0
+endsnippet
+
+context "math()"
+snippet lp "left parenthesis" iA
+\left($0
+endsnippet
+
+context "math()"
+snippet rp "right parenthesis" iA
+\right)$0
+endsnippet
+
+context "math()"
+snippet nl "New line with 10pt spacing" iA
+\\\[10pt]
+$0
+endsnippet
+
+context "math()"
+snippet nsl "New line with custom spacing" iA
+\\\[$1pt]
+$0
+endsnippet
+
+snippet nnl "New line" iA
+\\\*
+$0
+endsnippet
+
+snippet nnp "New paragraph" iA
+\\\
+$0
+endsnippet
+
+snippet reffig "insert a figure reference"
+Figure~\ref{fig:$1}$0
+endsnippet
+
+snippet reffigpage "insert a figure page number reference"
+~\pageref{fig:$1}$0
+endsnippet
+
+snippet reftab "insert a table reference"
+Table~\ref{tab:$1}$0
+endsnippet
+
+snippet reftabpage "insert a table page number reference"
+~\pageref{tab:$1}$0
+endsnippet
+
+# should be lower case like Appendix~\ref{appendix:a}
+snippet refapp "insert an appendix reference"
+Appendix~\ref{appendix:$1}$0
+endsnippet
+
+# SHould be lower case like \label{appendix:a}
+snippet mkapp "Make an appendix reference"
+\label{appendix:$1}
+$0
+endsnippet
+
+snippet usingbooktemplate "use book template style file" b
+\documentclass[letterpaper, 10pt, titlepage, oneside]{book}
+\usepackage{systems_book}
+
+%Page order
+% This is one traditional page order for books.
+
+% Frontmatter
+%   Half-title
+%   Empty
+%   Title page
+%   Information (copyright notice, ISBN, etc.)
+%   Dedication if any, else empty
+%   Table of contents
+%   List of figures (can be in the backmatter too)
+%   Preface chapter
+% Mainmatter
+%   Main topic
+% Appendix
+%   Some subordinate chapters
+% Backmatter
+%   Bibliography
+%   Glossary / Index
+
+\setheaderandfooter{${1:Author Name}}
+
+\begin{document}
+
+\maketitleandtoc{${2:Title}}{${1:Author Name}}{${3:Date}}
+
+%Actual Content below
+\part{Preface}
+   $0
+
+\renewcommand{\abstractname}{Preface}
+   This is the abstract \par
+
+%Items after this will get numbers when generated
+\mainmatter
+
+\part{Part 1}
+
+   \chapter{Chapter 1}
+      content
+      \section{Section 1}
+            
+            \vspace{10pt}
+%\import{./}{filename.tex}
+
+\appendix
+\part{appendix info}
+   Appendix here \par
+
+\backmatter
+\part{Post Appendix}
+   COntent here \par
+
+\bibliographystyle{unsrt}
+\bibliography{bibliography}
+
+\end{document}
+
+endsnippet
+
+
+snippet inlinebooktemplate "inline book template" b
+\documentclass[letterpaper, 10pt, titlepage, oneside]{book}
+
+% figure support
+\usepackage{import}
+\usepackage{pdfpages}
+\usepackage{transparent}
+\usepackage{xcolor}
+\usepackage{mathptmx} % For Times New Roman Font
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{fancyhdr}
+\usepackage{amsmath} % For align
+\usepackage{array} % For tabular formatting
+\usepackage{multirow} % For multiple rows in one table entry
+%\usepackage{tabularx} % For tabular formatting
+\usepackage[justification=centering]{caption} %To get centered long captions
+\usepackage[nottoc]{tocbibind}
+\usepackage[obeyspaces,spaces]{url} % for creation of paths with spaces and special characters with \path{\\}
+\usepackage{hyperref} % for creation of href's and urls
+\usepackage{graphicx} % for instertion of non pdf images
+%\usepackage{xargs} % for easier to use default arguements for functions
+\usepackage{pdfpages} % for inclusion of pdf's into the doc
+
+% for inkscape figures use
+\newcommand{\incfig}[2][1]{%
+    \def\svgwidth{#1\columnwidth}
+    \import{./figures/}{#2.pdf_tex}
+}
+
+% for the graphicx package
+\graphicspath{ {./images/} } 
+\newcommand{\incgraphics}[2][\textwidth]{\includegraphics[width=#1]{#2}}
+
+% for pdfpages
+\newcommand{\incpdf}[2]{\includepdf[pages={#1}]{./images/#2.pdf}}
+\newcommand{\incpdfcustomargs}[2]{\includepdf[#1]{./images/#2.pdf}}
+
+\pdfsuppresswarningpagegroup=1
+
+\definecolor{systemsblue}{RGB}{37,68,88}
+
+%Page order
+% This is one traditional page order for books.
+
+% Frontmatter
+%   Half-title
+%   Empty
+%   Title page
+%   Information (copyright notice, ISBN, etc.)
+%   Dedication if any, else empty
+%   Table of contents
+%   List of figures (can be in the backmatter too)
+%   Preface chapter
+% Mainmatter
+%   Main topic
+% Appendix
+%   Some subordinate chapters
+% Backmatter
+%   Bibliography
+%   Glossary / Index
+
+\setcounter{tocdepth}{7}
+%\pagenumberin{arabic}
+\pagestyle{fancyplain}
+\rhead{\fancyplain{pg \thepage}{pg \thepage}}
+\lhead{\fancyplain{${1:Author Name}}{${1:Author Name}}}
+\lfoot{\fancyplain{}{Section \thesection}}
+\cfoot{\fancyplain{Section \thesection}{}}
+\rfoot{\fancyplain{}{Chapter \thechapter}}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\begin{document}
+
+\frontmatter
+   \title{$2}
+   \author{${1:Author Name}}
+   \date{$3}
+
+\maketitle
+
+\renewcommand{\contentsname}{Table Of Contents}
+\tableofcontents
+\newpage
+
+\renewcommand{\listfigurename}{Figures}
+\listoffigures
+\newpage
+
+\renewcommand{\listtablename}{Tables}
+\listoftables
+\newpage
+
+%Actual Content below
+\part{Preface}
+   $0
+
+\renewcommand{\abstractname}{Preface}
+   This is the abstract \par
+
+%Items after this will get numbers when generated
+\mainmatter
+
+\part{Part 1}
+
+   \chapter{Chapter 1}
+      content
+      \section{Section 1}
+            
+            \vspace{10pt}
+
+\appendix
+\part{appendix info}
+   Appendix here \par
+
+\backmatter
+\part{Post Appendix}
+   COntent here \par
+
+\bibliographystyle{unsrt}
+\bibliography{bibliography}
+
+\end{document}
+
+endsnippet
+
+# vim:ft=snippets

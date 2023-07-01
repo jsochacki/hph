@@ -1,0 +1,10 @@
+" Can just add in initial vimrc creation but techincally since it doesn't exist when it runs before
+" you install the plugins it makes you press enter so i'll just add at the appropriate time here
+"echo '' >> ~/.vimrc.colors
+"echo '"add color scheme setup here' >> ~/.vimrc.colors
+"echo 'colorscheme molokai' >> ~/.vimrc.colors
+"echo '' >> ~/.vimrc.colors
+"echo '' >> ~/.vimrc.colors
+
+"add color scheme setup here
+colorscheme molokai

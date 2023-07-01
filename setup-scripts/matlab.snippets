@@ -1,0 +1,27 @@
+# Python helper functions
+global !p
+def convert(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1-\2', s1).lower()
+endglobal
+
+
+# Makes snipps here overwrite duplicates in extends file
+
+# Basic Snippets
+
+snippet hg "#include local header (linc)" bA
+#ifndef `!p snip.rv = snip.basename.upper() + '_H_'`
+#define `!p snip.rv = snip.basename.upper() + '_H_'`
+
+$0
+
+#endif /* `!p snip.rv = snip.basename.upper() + '_H_'` */
+endsnippet
+
+snippet mfunc "Quick Snippet Test" b
+function [$1] = $2($3)
+   $0
+end
+endsnippet
+

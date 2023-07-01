@@ -1,0 +1,185 @@
+# To also include c snippets when running cpp files
+# If you don't want this just comment the line below out
+priority -50
+
+extends c
+
+priority -49
+
+# Python helper functions
+global !p
+def convert(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1-\2', s1).lower()
+endglobal
+
+
+# Makes snipps here overwrite duplicates in extends file
+
+# Basic Snippets
+
+snippet printcoutt "Print to std::cout" bA
+   std::cout << "$0" << std::endl;
+endsnippet
+
+snippet printcoutv "Print to std::cout" bA
+   std::cout << "$0" << $1 << std::endl;
+endsnippet
+
+snippet lin "Include Local Header File" bA
+#include "$1""
+$0
+endsnippet
+
+snippet sin "Include System Header File" bA
+#include <$1>
+$0
+endsnippet
+
+snippet hg "#include local header (linc)" bA
+#ifndef `!p snip.rv = snip.basename.upper() + '_H_'`
+#define `!p snip.rv = snip.basename.upper() + '_H_'`
+
+$0
+
+#endif /* `!p snip.rv = snip.basename.upper() + '_H_'` */
+endsnippet
+
+snippet mmain "Make Main" bA
+int main(int argc, char* argv[])
+{
+   $0
+   return 1;
+}
+endsnippet
+
+# Template snippets
+
+# Header Files
+
+snippet tcp "Template Class Prototype" b
+   template<typename Type>
+   class CSLDECLSPEC
+   $1
+   {
+      public:
+         $1($0); /// Constructor
+         $1(const $1&); /// Copy Constructor
+         $1& operator=(const $1&); /// Assignment Operator
+         ~$1(); /// Destructor
+      private:
+   };
+endsnippet
+
+snippet tsp "Template Structure Prototype" b
+   template<typename Type>
+   struct CSLDECLSPEC
+   $1
+   {
+      public:
+         $1($0); /// Constructor
+         $1(const $1&); /// Copy Constructor
+         $1& operator=(const $1&); /// Assignment Operator
+         ~$1(); /// Destructor
+      private:
+   };
+endsnippet
+
+snippet tfp "Template Function Prototype" b
+   template<typename Type>
+   Type CSLDECLSPEC
+   $1($2);
+   $0
+endsnippet
+
+# Source Files
+
+snippet tccd "Template Class Constructor Definition" b
+   template<typename Type>
+   CSLDECLSPEC
+   $1<Type>::$1()
+   : ${2:InternalVariable}(${3:ArguementVariable})
+   {
+      ${4:Definition}
+   }
+endsnippet
+
+snippet tcmd "Template Class Void Method Definition Void" b
+   template<typename Type>
+   void CSLDECLSPEC
+   $1<Type>::$1(void)
+   {
+      ${2:Definition}
+   }
+endsnippet
+
+snippet eitc "Explicitly Instantiate Template Class" b
+  template class CSLDECLSPEC $1<float>;
+  template class CSLDECLSPEC $1<double>;
+  template class CSLDECLSPEC $1<long double>;
+  template class CSLDECLSPEC $1<int8_t>;
+  template class CSLDECLSPEC $1<int16_t>;
+  template class CSLDECLSPEC $1<int32_t>;
+  template class CSLDECLSPEC $1<int64_t>;
+  template class CSLDECLSPEC $1<uint8_t>;
+  template class CSLDECLSPEC $1<uint16_t>;
+  template class CSLDECLSPEC $1<uint32_t>;
+  template class CSLDECLSPEC $1<uint64_t>;
+endsnippet
+
+snippet eits "Explicitly Instantiate Template Structure" b
+  template struct CSLDECLSPEC $1<float>;
+  template struct CSLDECLSPEC $1<double>;
+  template struct CSLDECLSPEC $1<long double>;
+  template struct CSLDECLSPEC $1<int8_t>;
+  template struct CSLDECLSPEC $1<int16_t>;
+  template struct CSLDECLSPEC $1<int32_t>;
+  template struct CSLDECLSPEC $1<int64_t>;
+  template struct CSLDECLSPEC $1<uint8_t>;
+  template struct CSLDECLSPEC $1<uint16_t>;
+  template struct CSLDECLSPEC $1<uint32_t>;
+  template struct CSLDECLSPEC $1<uint64_t>;
+endsnippet
+
+snippet eitv "Explicitly Instantiate Template Variable" b
+  template float CSLDECLSPEC $1<float>;
+  template double CSLDECLSPEC $1<double>;
+  template long double CSLDECLSPEC $1<long double>;
+  template int8_t CSLDECLSPEC $1<int8_t>;
+  template int16_t CSLDECLSPEC $1<int16_t>;
+  template int32_t CSLDECLSPEC $1<int32_t>;
+  template int64_t CSLDECLSPEC $1<int64_t>;
+  template uint8_t CSLDECLSPEC $1<uint8_t>;
+  template uint16_t CSLDECLSPEC $1<uint16_t>;
+  template uint32_t CSLDECLSPEC $1<uint32_t>;
+  template uint64_t CSLDECLSPEC $1<uint64_t>;
+endsnippet
+
+snippet eitfv "Explicitly Instantiate Template Function Void" b
+  template float CSLDECLSPEC $1<float>(void);
+  template double CSLDECLSPEC $1<double>(void);
+  template long double CSLDECLSPEC $1<long double>(void);
+  template int8_t CSLDECLSPEC $1<int8_t>(void);
+  template int16_t CSLDECLSPEC $1<int16_t>(void);
+  template int32_t CSLDECLSPEC $1<int32_t>(void);
+  template int64_t CSLDECLSPEC $1<int64_t>(void);
+  template uint8_t CSLDECLSPEC $1<uint8_t>(void);
+  template uint16_t CSLDECLSPEC $1<uint16_t>(void);
+  template uint32_t CSLDECLSPEC $1<uint32_t>(void);
+  template uint64_t CSLDECLSPEC $1<uint64_t>(void);
+endsnippet
+
+snippet eitfnv "Explicitly Instantiate Template Function non void" b
+  template float CSLDECLSPEC $1<float>(REPLSTR);
+  template double CSLDECLSPEC $1<double>(REPLSTR);
+  template long double CSLDECLSPEC $1<long double>(REPLSTR);
+  template int8_t CSLDECLSPEC $1<int8_t>(REPLSTR);
+  template int16_t CSLDECLSPEC $1<int16_t>(REPLSTR);
+  template int32_t CSLDECLSPEC $1<int32_t>(REPLSTR);
+  template int64_t CSLDECLSPEC $1<int64_t>(REPLSTR);
+  template uint8_t CSLDECLSPEC $1<uint8_t>(REPLSTR);
+  template uint16_t CSLDECLSPEC $1<uint16_t>(REPLSTR);
+  template uint32_t CSLDECLSPEC $1<uint32_t>(REPLSTR);
+  template uint64_t CSLDECLSPEC $1<uint64_t>(REPLSTR);
+endsnippet
+

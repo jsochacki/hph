@@ -1,0 +1,32 @@
+# Doxygen Snippets Portion
+
+# Note that weird double expansion behaviour when using A option is not in raw
+# vim terminal for a .cpp or .c or .h file but just happens in multiwindow vim
+snippet docfile "Documentation section for the top of a file" b
+/**
+ * @file $1
+ *
+ * @author Author Name
+ * @version $2 
+ * @date $3
+ *
+ * @warning 
+ * @bug 
+ * @copyright GNU General Public License.v3.0
+ *
+ * @pre 
+ * @note 
+ *
+ * @brief $4
+ *
+ * @details
+ *  $0
+ *
+ */
+endsnippet
+
+snippet imgdoxmd "Add a markdown image for doxygen with the correct path to the image folder from the build folder" bA
+ * ![${4:${3/\w+\s*/\u$0/g}}]
+$5(../../../images/$1)
+$0 ${3:${2/\W+/ /gi}} ${2:${1/\.(\w{3,})$//gi}} ${1/\.(\w{3,})$//gi}
+endsnippet

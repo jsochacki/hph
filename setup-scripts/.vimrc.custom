@@ -1,0 +1,107 @@
+"cat >> ~/.vimrc.custom << 'EOF'
+
+" Add long list of very custom vim options here
+
+" Automatic view saving
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+set viewoptions=cursor,folds,slash,unix
+
+if !exists("g:autosave_view")
+    let g:autosave_view = 0
+endif
+
+function! MakeViewCheck()
+    " If we're not configured to autosave
+    if g:autosave_view == 0 | return 0 | endif
+    " if we're in diff mode
+    if &l:diff | return 0 | endif
+    " If we're not a file
+    if &buftype != '' | return 0 | endif
+    if expand('%') =~ '\[.*\]' | return 0 | endif
+    " File does not exist on disk
+    if empty(glob(expand('%:p'))) | return 0 | endif
+    if &modifiable == 0 | return 0 | endif
+    " If we're in the temp dir
+    if len($TEMP) && expand('%:p:h') == $TEMP | return 0 | endif
+    if len($TMP) && expand('%:p:h') == $TMP | return 0 | endif
+
+    return 1
+endfunction
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+"Shortcut (\t): Set 4 char space tabs
+"nmap \t :set expandtab tabstop=4 shiftwidth=4 softtabstop=4<CR>
+"Shortcut (\T): Set 8 char space tabs
+"nmap \T :set expandtab tabstop=8 shiftwidth=8 softtabstop=8<CR>
+"Shortcut (\m): Set 4 char tab tabs
+"nmap \m :set noexpandtab tabstop=4 shiftwidth=4 softtabstop=4<CR>
+"Shortcut (\M): Set 8 char tab tabs
+"nmap \M :set noexpandtab tabstop=8 shiftwidth=8 softtabstop=8<CR>
+
+" Shortcut (\woo): Toggle line wrapping at line limit
+nmap \woo :call AutoWrapToggle()<CR>
+function! AutoWrapToggle()
+    if &formatoptions =~ 't'
+        set fo-=t
+    else
+        set fo+=t
+    endif
+endfunction
+
+
+" Can change MakeTags to anything you want
+"command! MakeTags !ctags -R .
+
+let t:is_transparent = 1
+hi Normal guibg=NONE ctermbg=NONE
+" Or just use this if you want it to start off in molokai
+" let t:is_transparent = 0
+function! Toggle_transparent_background()
+  if t:is_transparent == 1
+    :color molokai
+    let t:is_transparent = 0
+else
+    hi Normal guibg=NONE ctermbg=NONE
+    let t:is_transparent = 1
+endif
+endfunction
+nnoremap <C-P> :call Toggle_transparent_background()<CR>
+
+" remap for normal mode
+nnoremap j h
+nnoremap k j
+nnoremap l k
+nnoremap ; l
+
+" remap for operator-pending mode
+onoremap j h
+onoremap k j
+onoremap l k
+onoremap ; l
+
+" remap for visual select mode
+xnoremap j h
+xnoremap k j
+xnoremap l k
+xnoremap ; l
+
+" remap for folding commands in normal mode
+nnoremap zj zh
+nnoremap zk zj
+nnoremap zl zk
+nnoremap z: zl
+
+" Remap window traversal to match movement keys above
+nnoremap <C-w>j <C-w>h
+nnoremap <C-w>k <C-w>j
+nnoremap <C-w>l <C-w>k
+nnoremap <C-w>; <C-w>l
+
+" Remap window movements to match movement keys above
+nnoremap <C-w>J <C-w>H
+nnoremap <C-w>K <C-w>J
+nnoremap <C-w>L <C-w>K
+nnoremap <C-w>: <C-w>L
+
+"EOF

@@ -1,0 +1,73 @@
+"cat >> ~/.vimrc.normal << 'EOF'
+
+" Turn on builting plugins
+filetype plugin on
+
+
+" Add general security options here
+" exrc forces vim to use the .vimrc in the local directory allowing for per directory customization
+set exrc
+" This restricts non home dir vimrc commands to keep local vimrc use secure so may cause problems
+" if there are issues start here
+set secure
+" Set not compatible
+set nocompatible
+
+" Setting options from this talk here mcantor/no_plugins
+set path+=**
+set wildmenu
+" Now we can hit tab to find by partial match and use * for wildcards
+" - :b lets you autocomplete any open buffer
+
+
+" Add basic vim Setup Options here
+set backspace=indent,eol,start
+set tabstop=3
+set softtabstop=3
+set shiftwidth=3
+set expandtab
+set colorcolumn=80
+set wrap
+set textwidth=80
+set showbreak=-linebreak-
+"set nowrap
+"set fo-=t
+highlight ColorColumn ctermbg=darkgray
+
+" Enable sytax highlighting
+" Note using syntax on means vim will override your syntax settings vs enable where it will not
+syntax enable
+" Turn on line numbers
+set number
+" Turn on column numbers
+set ruler
+" Enable mouse
+set mouse=a
+set ttymouse=xterm2
+" Set terminal title
+set title
+" Lots of undo steps
+set undolevels=1000
+" Match the default braces with cursor highlighting and also match <>
+set showmatch
+set cursorline
+set matchpairs+=<:>
+" Display tab characters as "|---" and spaces as ".", but only trailing spaces
+set list
+set listchars=tab:\|-,trail:.,extends:#,nbsp:.
+" Folding options
+set foldcolumn=1
+hi FoldColumn ctermbg=NONE
+set foldopen-=block
+
+" set UTF-8 encoding
+set enc=utf-8
+set fenc=utf-8
+set termencoding=utf-8
+
+" to taste, disble if you don't like
+set autoindent
+set smartindent
+set cindent
+
+"EOF

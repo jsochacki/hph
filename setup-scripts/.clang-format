@@ -1,0 +1,143 @@
+---
+# https://releases.llvm.org/10.0.0/tools/clang/docs/ClangFormatStyleOptions.html
+Language:        Cpp
+AccessModifierOffset: 0
+AlignAfterOpenBracket: Align
+AlignConsecutiveMacros: true
+AlignConsecutiveAssignments: true
+AlignConsecutiveDeclarations: true
+AlignEscapedNewlines: Left
+AlignOperands:   true
+AlignTrailingComments: true
+AllowAllArgumentsOnNextLine: false
+AllowAllConstructorInitializersOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: All
+AllowShortLambdasOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: Always
+AllowShortLoopsOnASingleLine: true
+AlwaysBreakAfterDefinitionReturnType: All
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: Yes
+BinPackArguments: false
+BinPackParameters: false
+BraceWrapping:
+  AfterCaseLabel:  true
+  AfterClass:      true
+  AfterControlStatement: Always
+  AfterEnum:       true
+  AfterFunction:   true
+  AfterNamespace:  true
+  AfterObjCDeclaration: true
+  AfterStruct:     true
+  AfterUnion:      true
+  AfterExternBlock: true
+  BeforeCatch:     true
+  BeforeElse:      true
+  IndentBraces:    false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+BreakBeforeBinaryOperators: All
+BreakBeforeBraces: Custom
+#This option is not in the format style options manual, consider testing
+#removal and functionality without it
+BreakBeforeInheritanceComma: true
+BreakInheritanceList: BeforeComma
+BreakBeforeTernaryOperators: true
+#This option is not in the format style options manual, consider testing
+#removal and functionality without it
+BreakConstructorInitializersBeforeComma: true
+BreakConstructorInitializers: BeforeComma
+BreakAfterJavaFieldAnnotations: true
+BreakStringLiterals: true
+ColumnLimit:     79
+CommentPragmas:  '^ NOSPLIT:'
+CompactNamespaces: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: false
+ConstructorInitializerIndentWidth: 3
+ContinuationIndentWidth: 3
+Cpp11BracedListStyle: false
+DeriveLineEnding: false
+DerivePointerAlignment: false
+DisableFormat:   false
+ExperimentalAutoDetectBinPacking: false
+FixNamespaceComments: true
+ForEachMacros:
+  - foreach
+  - Q_FOREACH
+  - BOOST_FOREACH
+IncludeBlocks:   Regroup
+IncludeCategories:
+  - Regex:           '\<([^.]*)\>'
+    Priority:        1
+    SortPriority:    1
+  - Regex:           '\<(.*)\.(h|hpp|cuh)\>'
+    Priority:        2
+    SortPriority:    2
+  - Regex:           '\"(.*)\.(h|hpp|cuh)\"'
+    Priority:        3
+    SortPriority:    3
+IncludeIsMainRegex: '(_test)?$'
+IncludeIsMainSourceRegex: '(*\.hpp)$'
+IndentCaseLabels: true
+IndentGotoLabels: true
+IndentPPDirectives: BeforeHash
+IndentWidth:     3
+IndentWrappedFunctionNames: false
+JavaScriptQuotes: Double
+JavaScriptWrapImports: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+MacroBlockBegin: '^NS_MAP_BEGIN|\NS_TABLE_HEAD$'
+MacroBlockEnd:   '^\NS_MAP_END|\NS_TABLE_.*_END$'
+MaxEmptyLinesToKeep: 2
+NamespaceIndentation: All
+ObjCBinPackProtocolList: Auto
+ObjCBlockIndentWidth: 3
+ObjCSpaceAfterProperty: false
+ObjCSpaceBeforeProtocolList: false
+PenaltyBreakAssignment: 2
+PenaltyBreakBeforeFirstCallParameter: 5
+PenaltyBreakComment: 4
+PenaltyBreakFirstLessLess: 3
+PenaltyBreakString: 6
+PenaltyBreakTemplateDeclaration: 10
+PenaltyExcessCharacter: 100
+PenaltyReturnTypeOnItsOwnLine: 60
+PointerAlignment: Left
+ReflowComments:  true
+SortIncludes:    true
+SortUsingDeclarations: true
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+SpaceAfterTemplateKeyword: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCpp11BracedList: false
+SpaceBeforeCtorInitializerColon: true
+SpaceBeforeInheritanceColon: true
+SpaceBeforeParens: Never
+SpaceBeforeRangeBasedForLoopColon: true
+SpaceInEmptyBlock: false
+SpaceInEmptyParentheses: false
+SpacesBeforeTrailingComments: 3
+SpacesInAngles:  false
+SpacesInConditionalStatement: false
+SpacesInContainerLiterals: true
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpaceBeforeSquareBrackets: false
+# For complete language support with NVCC use c++14
+# Otherwise for complete clang support don't go above c++17
+# https://en.cppreference.com/w/cpp/compiler_support
+Standard:        c++17
+StatementMacros:
+  - Q_UNUSED
+  - QT_REQUIRE_VERSION
+TabWidth:        3
+UseCRLF:         false
+UseTab:          Never
+...

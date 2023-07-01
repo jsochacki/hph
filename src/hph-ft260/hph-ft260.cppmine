@@ -1,0 +1,467 @@
+#include <linux/types.h>
+#include <linux/input.h>
+#include <linux/hidraw.h>
+
+/*
+* For the systems that don't have the new version of hidraw.h in userspace.
+*/
+
+#ifndef HIDIOCSFEATURE
+#warning Please have your distro update the userspace kernel headers
+#define HIDIOCSFEATURE(len) _IOC(_IOC_WRITE|_IOC_READ, 'H',0x06, len)
+#define HIDIOCGFEATURE(len) _IOC(_IOC_WRITE|_IOC_READ, 'H',0x07, len)
+#endif
+
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
+
+const char* bus_type_str(int bus)
+{
+   switch (bus)
+   {
+      case BUS_USB: return "USB";
+      case BUS_HIL: return "HIL";
+      case BUS_BLUETOOTH: return "Bluetooth";
+      case BUS_VIRTUAL: return "Virtual";
+      default: return "Other";
+   }
+}
+
+int main(int argc, char** argv)
+{
+   int number_of_ft260_devices = 2;
+   int char_buf_size= 256;
+   int byte_count = 0;
+   int fds[number_of_ft260_devices];
+   int res, desc_size = 0;
+   char buf[char_buf_size];
+   struct hidraw_report_descriptor rpt_desc;
+   struct hidraw_devinfo info;
+   char ft260_paths[][100] = {"/dev/hidraw0", "/dev/hidraw1"};
+
+   /* Open the Devices with non-blocking reads. */
+   //for(int i = 0; i < number_of_ft260_devices; ++i)
+   int i=1;
+   {
+      fds[i] = open(ft260_paths[i], O_RDWR|O_NONBLOCK);
+
+      if (fds[i] < 0)
+      {
+         perror("Unable to open device");
+         return 1;
+      }
+
+      memset(&rpt_desc, 0x0, sizeof(rpt_desc));
+      memset(&info, 0x0, sizeof(info));
+      memset(buf, 0x0, sizeof(buf));
+
+      /* Get Report Descriptor Size */
+      res = ioctl(fds[i], HIDIOCGRDESCSIZE, &desc_size);
+      if (res < 0)
+      {
+         perror("HIDIOCGRDESCSIZE");
+      }
+      else
+      {
+         printf("Report Descriptor Size: %d\n", desc_size);
+      }
+
+      /* Get Report Descriptor */
+      rpt_desc.size = desc_size;
+      res = ioctl(fds[i], HIDIOCGRDESC, &rpt_desc);
+      if (res < 0)
+      {
+         perror("HIDIOCGRDESC");
+      }
+      else
+      {
+         printf("Report Descriptor:\n");
+         for (int count = 0; count < rpt_desc.size; ++count)
+         {
+            printf("%hhx ", rpt_desc.value[count]);
+         }
+         puts("\n");
+      }
+
+//      /* Get Raw Name */
+//      res = ioctl(fds[i], HIDIOCGRAWNAME(256), buf);
+//      if (res < 0)
+//      {
+//         perror("HIDIOCGRAWNAME");
+//      }
+//      else
+//      {
+//         printf("Raw Name: %s\n", buf);
+//      }
+//
+//      /* Get Physical Location */
+//      res = ioctl(fds[i], HIDIOCGRAWPHYS(256), buf);
+//      if (res < 0)
+//      {
+//         perror("HIDIOCGRAWPHYS");
+//      }
+//      else
+//      {
+//         printf("Raw Phys: %s\n", buf);
+//      }
+//
+//      /* Get Raw Info */
+//      res = ioctl(fds[i], HIDIOCGRAWINFO, &info);
+//      if (res < 0)
+//      {
+//         perror("HIDIOCGRAWINFO");
+//      }
+//      else
+//      {
+//         printf("Raw Info:\n");
+//         printf("\tbustype: %d (%s)\n", info.bustype, bus_type_str(info.bustype));
+//         printf("\tvendor: 0x%04hx\n", info.vendor);
+//         printf("\tproduct: 0x%04hx\n", info.product);
+//      }
+//
+//      /* Set Feature */
+//      byte_count = 0;
+//      buf[byte_count] = 0xA1; /* SYSTEM_SETTING_ID */
+//      ++byte_count;
+//      buf[byte_count] = 0x22; /* I2C_SPEED */
+//      ++byte_count;
+//      buf[byte_count] = 0x64; /* 100Kbps */
+//      ++byte_count;
+//      buf[byte_count] = 0x00;
+//      ++byte_count;
+//
+//      res = ioctl(fds[i], HIDIOCSFEATURE(byte_count), buf);
+//      if (res < 0)
+//      {
+//         perror("HIDIOCSFEATURE");
+//      }
+//      else
+//      {
+//         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+//      }
+//
+//      /* Set Feature */
+//      byte_count = 0;
+//      buf[byte_count] = 0xA1; /* SYSTEM_SETTING_ID */
+//      ++byte_count;
+//      buf[byte_count] = 0x01; /* Set Clock */
+//      ++byte_count;
+//      buf[byte_count] = 0x02; /* 48MHz */
+//      ++byte_count;
+//
+//      res = ioctl(fds[i], HIDIOCSFEATURE(byte_count), buf);
+//      if (res < 0)
+//      {
+//         perror("HIDIOCSFEATURE");
+//      }
+//      else
+//      {
+//         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+//      }
+//
+//      /* Set Feature */
+//      byte_count = 0;
+//      buf[byte_count] = 0xA1; /* SYSTEM_SETTING_ID */
+//      ++byte_count;
+//      buf[byte_count] = 0x02; /* Set I2C Mode */
+//      ++byte_count;
+//      buf[byte_count] = 0x01; /* Enabled */
+//      ++byte_count;
+//
+//      res = ioctl(fds[i], HIDIOCSFEATURE(byte_count), buf);
+//      if (res < 0)
+//      {
+//         perror("HIDIOCSFEATURE");
+//      }
+//      else
+//      {
+//         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+//      }
+
+      /* Set Feature */
+      byte_count = 0;
+      buf[byte_count] = 0xA1; /* SYSTEM_SETTING_ID */
+      ++byte_count;
+      buf[byte_count] = 0x03; /* Set UART Mode */
+      ++byte_count;
+      buf[byte_count] = 0x00; /* GPIO Only */
+      ++byte_count;
+
+      res = ioctl(fds[i], HIDIOCSFEATURE(byte_count), buf);
+      if (res < 0)
+      {
+         perror("HIDIOCSFEATURE");
+      }
+      else
+      {
+         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+      }
+
+
+      /* Set Feature */
+      byte_count = 0;
+      buf[byte_count] = 0xA1; /* SYSTEM_SETTING_ID */
+      ++byte_count;
+      buf[byte_count] = 0x05; /* Set Interrupt Mode */
+      ++byte_count;
+      if(i == 0)
+      {
+         buf[byte_count] = 0x01; /* yes for hidraw0 */
+      }
+      else
+      {
+         buf[byte_count] = 0x00; /* no for hidraw1 */
+      }
+      ++byte_count;
+
+      res = ioctl(fds[i], HIDIOCSFEATURE(byte_count), buf);
+      if (res < 0)
+      {
+         perror("HIDIOCSFEATURE");
+      }
+      else
+      {
+         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+      }
+
+      /* Set Feature */
+      byte_count = 0;
+      buf[byte_count] = 0xA1; /* SYSTEM_SETTING_ID */
+      ++byte_count;
+      buf[byte_count] = 0x06; /* Set GPIO2 Function */
+      ++byte_count;
+      buf[byte_count] = 0x00; /* GPIO */
+      ++byte_count;
+
+      res = ioctl(fds[i], HIDIOCSFEATURE(byte_count), buf);
+      if (res < 0)
+      {
+         perror("HIDIOCSFEATURE");
+      }
+      else
+      {
+         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+      }
+
+      /* Set Feature */
+      byte_count = 0;
+      buf[byte_count] = 0xA1; /* SYSTEM_SETTING_ID */
+      ++byte_count;
+      buf[byte_count] = 0x07; /* Set UART DCD RI Mode */
+      ++byte_count;
+      buf[byte_count] = 0x00; /* GPIO4 and 5 */
+      ++byte_count;
+
+      res = ioctl(fds[i], HIDIOCSFEATURE(byte_count), buf);
+      if (res < 0)
+      {
+         perror("HIDIOCSFEATURE");
+      }
+      else
+      {
+         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+      }
+
+      /* Set Feature */
+      byte_count = 0;
+      buf[byte_count] = 0xA1; /* SYSTEM_SETTING_ID */
+      ++byte_count;
+      buf[byte_count] = 0x08; /* Set GPIOA Function */
+      ++byte_count;
+      buf[byte_count] = 0x00; /* GPIO */
+      ++byte_count;
+
+      res = ioctl(fds[i], HIDIOCSFEATURE(byte_count), buf);
+      if (res < 0)
+      {
+         perror("HIDIOCSFEATURE");
+      }
+      else
+      {
+         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+      }
+
+      /* Set Feature */
+      byte_count = 0;
+      buf[byte_count] = 0xA1; /* SYSTEM_SETTING_ID */
+      ++byte_count;
+      buf[byte_count] = 0x09; /* Set GPIOG Function */
+      ++byte_count;
+      buf[byte_count] = 0x00; /* GPIO */
+      ++byte_count;
+
+      res = ioctl(fds[i], HIDIOCSFEATURE(byte_count), buf);
+      if (res < 0)
+      {
+         perror("HIDIOCSFEATURE");
+      }
+      else
+      {
+         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+      }
+
+      /* Set Feature */
+      byte_count = 0;
+      buf[byte_count] = 0xA1; /* SYSTEM_SETTING_ID */
+      ++byte_count;
+      buf[byte_count] = 0x0A; /* Set Interrupt Trigger Conditions */
+      ++byte_count;
+      buf[byte_count] = 0x00; /* Rising Edge */
+      ++byte_count;
+      buf[byte_count] = 0x01; /* 1ms (ignored in rising edge mode) */
+      ++byte_count;
+
+      res = ioctl(fds[i], HIDIOCSFEATURE(byte_count), buf);
+      if (res < 0)
+      {
+         perror("HIDIOCSFEATURE");
+      }
+      else
+      {
+         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+      }
+
+      /* Set Feature */
+      byte_count = 0;
+      buf[byte_count] = 0xA1; /* SYSTEM_SETTING_ID */
+      ++byte_count;
+      buf[byte_count] = 0x0B; /* Set Suspend Out Polarity */
+      ++byte_count;
+      buf[byte_count] = 0x00; /* Active High */
+      ++byte_count;
+
+      res = ioctl(fds[i], HIDIOCSFEATURE(byte_count), buf);
+      if (res < 0)
+      {
+         perror("HIDIOCSFEATURE");
+      }
+      else
+      {
+         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+      }
+
+
+      //enough for now, come back later and complete
+
+
+//      /* Read Settings*/
+//      byte_count = 0;
+//      buf[byte_count] = 0xA1; /* System Setting Id */
+//      ++byte_count;
+//      res = ioctl(fds[i], HIDIOCSFEATURE(char_buf_size), buf);
+//      if (res < 0)
+//      {
+//         perror("HIDIOCSFEATURE");
+//      }
+//      else
+//      {
+//         printf("ioctl HIDIOCGFEATURE returned: %d\n", res);
+//         for(int count = 0; count < res; ++count)
+//         {
+//            printf("BYTE[%d]=%hhx\n", count, buf[count]);
+//         }
+//      }
+
+
+//      /* Write GPIO Settings */
+//      byte_count = 0;
+//      buf[byte_count] = 0xB0; /* GPIO */
+//      ++byte_count;
+//      buf[byte_count] = 0x00; /* no value, read all */
+//      ++byte_count;
+//      buf[byte_count] = 0x00; /* read */
+//      ++byte_count;
+//      buf[byte_count] = 0x00; /* no value, read all */
+//      ++byte_count;
+//      buf[byte_count] = 0x00; /* read */
+//      ++byte_count;
+//      res = write(fds[i], buf, byte_count);
+//      if (res < 0)
+//      {
+//         printf("Error: %d\n", errno);
+//         perror("write");
+//      }
+//      else
+//      {
+//         printf("write() wrote %d bytes\n", res);
+//      }
+
+      /* Read GPIO Settings */
+      res = read(fds[i], buf, 16);
+      if (res < 0)
+      {
+         perror("read");
+      }
+      else
+      {
+         printf("read() read %d bytes:\n", res);
+         for(int count = 0; count < res; ++count)
+         {
+            printf("BYTE[%d]=%hhx\n", count, buf[count]);
+         }
+      }
+
+
+//      /* Write GPIO Settings */
+//      byte_count = 0;
+//      buf[byte_count] = 0xB0; /* GPIO */
+//      ++byte_count;
+//      buf[byte_count] = 0x00; /* no value, read all */
+//      ++byte_count;
+//      buf[byte_count] = 0x01; /* read */
+//      ++byte_count;
+//      buf[byte_count] = 0x00; /* no value, read all */
+//      ++byte_count;
+//      buf[byte_count] = 0x01; /* read */
+//      ++byte_count;
+//      res = write(fds[i], buf, byte_count);
+//      if (res < 0)
+//      {
+//         printf("Error: %d\n", errno);
+//         perror("write");
+//      }
+//      else
+//      {
+//         printf("write() wrote %d bytes\n", res);
+//      }
+//
+//
+//      /* Write GPIO Settings */
+//      byte_count = 0;
+//      buf[byte_count] = 0xB0; /* GPIO */
+//      ++byte_count;
+//      buf[byte_count] = 0xFF; /* no value, read all */
+//      ++byte_count;
+//      buf[byte_count] = 0x01; /* read */
+//      ++byte_count;
+//      buf[byte_count] = 0xFF; /* no value, read all */
+//      ++byte_count;
+//      buf[byte_count] = 0x01; /* read */
+//      ++byte_count;
+//      res = write(fds[i], buf, byte_count);
+//      if (res < 0)
+//      {
+//         printf("Error: %d\n", errno);
+//         perror("write");
+//      }
+//      else
+//      {
+//         printf("write() wrote %d bytes\n", res);
+//      }
+   }
+
+   //for(int i = 0; i < number_of_ft260_devices; ++i)
+   {
+      close(fds[i]);
+   }
+
+   return 0;
+}

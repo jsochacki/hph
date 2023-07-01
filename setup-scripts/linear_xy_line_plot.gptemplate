@@ -1,0 +1,130 @@
+basefilename = "file-name-of-csv-file-no-extension-or-path"
+
+line1plotname = '$\text{Line\;Name}$'
+titlename = '$\text{Title\;On\;Graph}$'
+xlabelname = '$latexformulas$'
+ylabelname = '$morelatexformulas$'
+
+
+set title titlename
+set xlabel xlabelname
+set ylabel ylabelname
+
+set key noautotitle
+set key on fixed right top horizontal
+
+set datafile separator ','
+set datafile commentschars "#"
+set datafile missing 'NaN'
+
+set colorsequence podo
+
+# set some line styles for plotting with
+set style line 100 lw 1 dt 0 lc rgb "#000000"
+set style line 200 lw 2 dt 0 lc rgb "#000000"
+set style line 300 lw 3 dt 0 lc rgb "#000000"
+set style line 110 lw 1 dt 1 lc rgb "#000000"
+set style line 210 lw 2 dt 1 lc rgb "#000000"
+set style line 310 lw 3 dt 1 lc rgb "#000000"
+set style line 120 lw 1 dt 2 lc rgb "#000000"
+set style line 220 lw 2 dt 2 lc rgb "#000000"
+set style line 320 lw 3 dt 2 lc rgb "#000000"
+set style line 130 lw 1 dt 4 lc rgb "#000000"
+set style line 230 lw 2 dt 4 lc rgb "#000000"
+set style line 330 lw 3 dt 4 lc rgb "#000000"
+set style line 140 lw 1 dt 5 lc rgb "#000000"
+set style line 240 lw 2 dt 5 lc rgb "#000000"
+set style line 340 lw 3 dt 5 lc rgb "#000000"
+set style line 101 lw 1 dt 0 lc rgb "grey"
+set style line 201 lw 2 dt 0 lc rgb "grey"
+set style line 301 lw 3 dt 0 lc rgb "grey"
+set style line 111 lw 1 dt 1 lc rgb "grey"
+set style line 211 lw 2 dt 1 lc rgb "grey"
+set style line 311 lw 3 dt 1 lc rgb "grey"
+set style line 121 lw 1 dt 2 lc rgb "grey"
+set style line 221 lw 2 dt 2 lc rgb "grey"
+set style line 321 lw 3 dt 2 lc rgb "grey"
+set style line 131 lw 1 dt 4 lc rgb "grey"
+set style line 231 lw 2 dt 4 lc rgb "grey"
+set style line 331 lw 3 dt 4 lc rgb "grey"
+set style line 141 lw 1 dt 5 lc rgb "grey"
+set style line 241 lw 2 dt 5 lc rgb "grey"
+set style line 341 lw 3 dt 5 lc rgb "grey"
+
+set grid ls 110
+
+filetoplot = sprintf("%s.csv", basefilename)
+filetowrite = sprintf("%s.tex", basefilename)
+
+fullparentpath = system("pwd")
+fullfiledata = sprintf("%s/csv-data/%s", fullparentpath, filetoplot)
+fullfileoutput = sprintf("%s/build/gnuplot/%s", fullparentpath, filetowrite)
+
+set terminal cairolatex \
+pdf \
+standalone \
+header '\usepackage{transparent} \usepackage{xcolor} \usepackage{graphicx} \usepackage{mathptmx} \usepackage[english]{babel} \usepackage[utf8]{inputenc} \usepackage{amsmath}' \
+font 'Times-Roman,10' \
+transparent \
+blacktext
+
+set output fullfileoutput
+
+plot fullfiledata \
+      using 1:2 with lines title line1plotname ls 310
+
+
+#HOWTO INFO BELOW
+
+# to add another line replace the line above with the line below and add the
+# line below the line below as well
+#     using 1:2 with lines title line1plotname ls 310 \
+#, '' using 1:3 with lines title line2plotname ls 311
+
+# '' just means use the data file and is used for subsequent plots from the same file
+
+# set y2tics # enagles the second y axis
+# set ytics nomirror # dont show the tics on that side
+# set y2label "Second Y Axis Value" # label for second axis
+# and to plot against it use "using 1:2 axis x1y2"
+# to set the range use "set y2range [0:]"
+
+# dt 0 is dots
+# dt 1 is solid line
+# dt 2 is dashes
+# dt 3 is dots again
+# dt 4 is dash dot
+# dt 5 is dot dot dash
+# dt 6 is solid again
+# dt 7 is dash
+# dt 8 is dots again
+
+#podo colorsequence
+# lt 1 is black
+# lt 2 is tan
+# lt 3 is light blue
+# lt 4 is green
+# lt 5 is yellow
+# lt 6 is dark blue
+# lt 7 is orange
+# lt 8 is pink
+
+# for with linespoints or with points
+# pt 0 is dots and is terrible
+# pt 1 is +
+# pt 2 is x
+# pt 3 is *
+# pt 4 is hollow boxes
+# pt 5 is filled boxes
+# pt 6 is hollow circles
+# pt 7 is filled circles
+# pt 8 is hollow triangles
+# pt 9 is filled triangles
+# pt 10 is hollow upside down triangles
+# pt 11 is filled upside down triangles
+# pt 12 is hollow diamonds
+# pt 13 is filled diamonds
+# pt 14 is hollow pentagons
+# pt 15 is filled pentagons
+
+# lastly pi is used to set the point interval
