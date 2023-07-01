@@ -3,7 +3,7 @@
 #include <wchar.h> // wchar_t
 #include <string.h>
 
-#include <hidapi.h>
+#include "hph-hidapi.hpp"
 
 #define HPH_FT260_MAX_STR 255
 #define HPH_FT260_MAX_CHAR_BUF 255

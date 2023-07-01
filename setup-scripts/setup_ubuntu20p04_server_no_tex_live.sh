@@ -35,7 +35,15 @@ function_apt_wait_for_unlock sudo apt-get install -y libc6-dbg libc6-dev glibc-d
 function_apt_wait_for_unlock sudo apt-get install -y linux-source
 
 # hph driver test section
-function_apt_wait_for_unlock sudo apt-get install -y libhidapi-dev
+# Nope, have to manually build this one to get current functionality
+#function_apt_wait_for_unlock sudo apt-get install -y libhidapi-dev
+wget http://archive.ubuntu.com/ubuntu/pool/main/s/systemd/libudev-dev_245.4-4ubuntu3.22_amd64.deb
+sudo apt install ./libudev-dev_245.4-4ubuntu3.22_amd64.deb 
+sudo rm libudev-dev_245.4-4ubuntu3.22_amd64.deb
+git clone https://github.com/libusb/hidapi.git
+mkdir build
+cd build
+cmake ../hidapi/
 
 # Need to get X display server starter for i3
 function_apt_wait_for_unlock sudo apt install -y xinit
