@@ -16,6 +16,9 @@ LDFLAGS+=-lhidapi-hidraw
 
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 
+LIBRARIES_PATH:=/usr/local/lib
+LIBRARIES_FLAG:=$(addprefix -L,$(LIBRARIES_PATH))
+
 RPATH_PATH:=/usr/local/lib
 RPATH_FLAGS:=-Wl,$(addprefix -rpath=,$(RPATH_PATH))
 
@@ -24,7 +27,7 @@ CC  = gcc
 endif
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
-	$(CC) $(OBJS) -o $@ $(RPATH_FLAGS) $(LDFLAGS)
+	$(CC) $(OBJS) -o $@ $(LIBRARIES_FLAG) $(RPATH_FLAGS) $(LDFLAGS)
 
 # assembly
 $(BUILD_DIR)/%.s.o: %.s
