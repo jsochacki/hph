@@ -37,13 +37,20 @@ function_apt_wait_for_unlock sudo apt-get install -y linux-source
 # hph driver test section
 # Nope, have to manually build this one to get current functionality
 #function_apt_wait_for_unlock sudo apt-get install -y libhidapi-dev
-wget http://archive.ubuntu.com/ubuntu/pool/main/s/systemd/libudev-dev_245.4-4ubuntu3.22_amd64.deb
-sudo apt install ./libudev-dev_245.4-4ubuntu3.22_amd64.deb 
+wget https://mirrors.edge.kernel.org/ubuntu/pool/main/s/systemd/libudev-dev_245.4-4ubuntu3.22_amd64.deb
+sudo apt-get install ./libudev-dev_245.4-4ubuntu3.22_amd64.deb
 sudo rm libudev-dev_245.4-4ubuntu3.22_amd64.deb
+sudo apt-get install libusb-1.0-0-dev
 git clone https://github.com/libusb/hidapi.git
 mkdir build
 cd build
 cmake ../hidapi/
+cmake --build .
+# if there are issues do this instead
+#sudo cmake --build .
+sudo cmake --build . --target install
+cd ..
+rm -rf build hidapi/
 
 # Need to get X display server starter for i3
 function_apt_wait_for_unlock sudo apt install -y xinit

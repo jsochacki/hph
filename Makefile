@@ -9,20 +9,22 @@ DEPS := $(OBJS:.o=.d)
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 #INC_DIRS += ./lib
-INC_DIRS += /usr/include
+INC_DIRS += /usr/local/include
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 LDFLAGS+=-lhidapi-hidraw
 
-
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
+
+RPATH_PATH:=/usr/local/lib
+RPATH_FLAGS:=-Wl,$(addprefix -rpath=,$(RPATH_PATH))
 
 ifeq ($(origin CC),default)
 CC  = gcc
 endif
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
-	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+	$(CC) $(OBJS) -o $@ $(RPATH_FLAGS) $(LDFLAGS)
 
 # assembly
 $(BUILD_DIR)/%.s.o: %.s
@@ -48,6 +50,7 @@ clean:
 print:
 	echo CC=$(CC) CFLAGS=$(CFLAGS)
 	echo INC_DIRS=$(INC_DIRS)
+	echo RPATH_FLAGS=$(RPATH_FLAGS)
 
 -include $(DEPS)
 
