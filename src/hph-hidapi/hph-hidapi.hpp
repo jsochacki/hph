@@ -2,6 +2,7 @@
 #include <wchar.h>
 #include <string.h>
 #include <stdlib.h>
+#include <string> // for wstring
 
 #include <hidapi/hidapi.h>
 
@@ -37,6 +38,14 @@
 namespace hph
 {
 
+   struct hid_device_search_parameters
+   {
+      wchar_t* manufacturer_string;
+      wchar_t* product_string;
+      ushort vendor_id;
+      ushort product_id;
+   };
+
    const char *const hid_bus_type_name[] = {"Unknown",
                                             "USB",
                                             "Bluetooth",
@@ -50,5 +59,9 @@ namespace hph
    void print_hid_report_descriptor_from_path(const char *path);
    void print_devices(struct hid_device_info *cur_dev);
    void print_devices_with_descriptor(struct hid_device_info *cur_dev);
-
+   int count_devices(struct hid_device_info *cur_dev);
+   int get_devices(struct hid_device_info *cur_dev,
+                    hid_device_search_parameters dev_to_find,
+                    char ** devices_found);
+   wchar_t *utf8_to_wchar_t(const char *utf8);
 }

@@ -88,4 +88,60 @@ namespace hph
       }
    }
 
+   int count_devices(struct hid_device_info *cur_dev)
+   {
+      int device_count = 0;
+      for (; cur_dev; cur_dev = cur_dev->next)
+      {
+         ++device_count;
+      }
+      return device_count;
+   }
+
+   int get_devices(struct hid_device_info *cur_dev, hid_device_search_parameters dev_to_find, char **devices_found)
+   {
+      int found_device_count = 0;
+      std::wstring tempstr2(dev_to_find.manufacturer_string);
+      std::wstring tempstr4(dev_to_find.product_string);
+      for (; cur_dev; cur_dev = cur_dev->next)
+      {
+         std::wstring tempstr1(cur_dev->manufacturer_string);
+         std::wstring tempstr3(cur_dev->product_string);
+         if((tempstr1 == tempstr2)
+         && (tempstr3 == tempstr4)
+         && (cur_dev->vendor_id == dev_to_find.vendor_id)
+         && (cur_dev->product_id == dev_to_find.product_id))
+         {
+            //hid.c uses strdup to set path member
+            //strdup which Returns a pointer to a null-terminated byte string
+            //so we can use strlen for length of char array
+            devices_found[found_device_count]
+               = (char*) calloc(strlen(cur_dev->path), sizeof(char));
+            devices_found[found_device_count++] = cur_dev->path;
+         }
+      }
+      return found_device_count;
+   }
+
+   wchar_t *utf8_to_wchar_t(const char *utf8)
+   {
+      wchar_t *ret = NULL;
+
+      if (utf8) {
+         size_t wlen = mbstowcs(NULL, utf8, 0);
+         if ((size_t) -1 == wlen) {
+            return wcsdup(L"");
+         }
+         ret = (wchar_t*) calloc(wlen+1, sizeof(wchar_t));
+         if (ret == NULL) {
+            /* as much as we can do at this point */
+            return NULL;
+         }
+         mbstowcs(ret, utf8, wlen+1);
+         ret[wlen] = 0x0000;
+      }
+
+      return ret;
+   }
+
 }

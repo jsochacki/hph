@@ -13,6 +13,7 @@ INC_DIRS += /usr/local/include
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 LDFLAGS+=-lhidapi-hidraw
+LDFLAGS+=-lstdc++
 
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 

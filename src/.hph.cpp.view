@@ -1,6 +1,6 @@
 let s:so_save = &g:so | let s:siso_save = &g:siso | setg so=0 siso=0 | setl so=-1 siso=-1
 argglobal
-if bufexists(fnamemodify("~/git/hph/src/hph-hidapi/hph-hidapi.hpp", ":p")) | buffer ~/git/hph/src/hph-hidapi/hph-hidapi.hpp | else | edit ~/git/hph/src/hph-hidapi/hph-hidapi.hpp | endif
+if bufexists(fnamemodify("~/git/hph/src/hph.cpp", ":p")) | buffer ~/git/hph/src/hph.cpp | else | edit ~/git/hph/src/hph.cpp | endif
 setlocal fdm=manual
 setlocal fde=0
 setlocal fmr={{{,}}}
@@ -11,12 +11,12 @@ setlocal fdn=20
 setlocal fen
 silent! normal! zE
 let &fdl = &fdl
-let s:l = 29 - ((28 * winheight(0) + 31) / 63)
+let s:l = 7 - ((4 * winheight(0) + 15) / 31)
 if s:l < 1 | let s:l = 1 | endif
 keepjumps exe s:l
 normal! zt
-keepjumps 29
-normal! 0
+keepjumps 7
+normal! 043|
 let &g:so = s:so_save | let &g:siso = s:siso_save
 nohlsearch
 doautoall SessionLoadPost
