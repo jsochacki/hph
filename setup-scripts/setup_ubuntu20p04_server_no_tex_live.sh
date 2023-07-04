@@ -40,7 +40,7 @@ function_apt_wait_for_unlock sudo apt-get install -y linux-source
 wget https://mirrors.edge.kernel.org/ubuntu/pool/main/s/systemd/libudev-dev_245.4-4ubuntu3.22_amd64.deb
 sudo apt-get install ./libudev-dev_245.4-4ubuntu3.22_amd64.deb
 sudo rm libudev-dev_245.4-4ubuntu3.22_amd64.deb
-sudo apt-get install libusb-1.0-0-dev
+sudo apt-get install -y libusb-1.0-0-dev
 git clone https://github.com/libusb/hidapi.git
 mkdir build
 cd build
