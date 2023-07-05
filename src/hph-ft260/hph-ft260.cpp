@@ -9,8 +9,8 @@ namespace hph
       char product_string[] = "FT260";
       ft260_device_parameters.manufacturer_string = utf8_to_wchar_t(manufacturer_string);
       ft260_device_parameters.product_string = utf8_to_wchar_t(product_string);
-      ft260_device_parameters.vendor_id = HPH_FT260_VENDOR_ID;
-      ft260_device_parameters.product_id = HPH_FT260_PRODUCT_ID;
+      ft260_device_parameters.vendor_id = hph_ft260_vendor_id;
+      ft260_device_parameters.product_id = hph_ft260_product_id;
 
       /*
       printf("mfg string is %ls\n", ft260_device_parameters.manufacturer_string);
@@ -54,73 +54,95 @@ namespace hph
          ft260_devices = get_devices(devs, ft260_device_parameters, devices_found);
 
          printf("ft260 hid devices found is %d\n", ft260_devices);
+         printf("\n");
+
+         handles = (hid_device**) calloc(ft260_devices, sizeof(hid_device*));
 
          for(int i = 0; i < ft260_devices; ++i)
          {
             printf("ft260 device %d path is %s\n", i, devices_found[i]);
+            printf("\n");
+
+            handles[i] = hid_open_path(devices_found[i]);
+
+            if (!handles[i])
+            {
+               printf("Unable to open device\n");
+               hid_exit();
+               *error_code = 2; // hid_device open failure error
+            }
+            else
+            {
+               // Read the Manufacturer String
+               res = hid_get_manufacturer_string(handles[i], wstr, hph_ft260_max_str_len);
+               printf("Manufacturer String: %ls\n", wstr);
+
+               // Read the Product String
+               res = hid_get_product_string(handles[i], wstr, hph_ft260_max_str_len);
+               printf("Product String: %ls\n", wstr);
+
+               // Read the Serial Number String
+               res = hid_get_serial_number_string(handles[i], wstr, hph_ft260_max_str_len);
+               printf("Serial Number String: (%d) %ls\n", wstr[0], wstr);
+
+               // Read Indexed String 1
+               res = hid_get_indexed_string(handles[i], 1, wstr, hph_ft260_max_str_len);
+               printf("Indexed String 1: %ls\n", wstr);
+               printf("\n");
+            }
          }
 
          hid_free_enumeration(devs);
-
-         /*
-
-         // Open the device using the VID, PID,
-         // and optionally the Serial number.
-         handle = hid_open(FT260_VENDOR_ID, FT260_PRODUCT_ID, NULL);
-
-         if (!handle)
-         {
-            printf("Unable to open device\n");
-            hid_exit();
-            return 1;
-         }
-
-         // Read the Manufacturer String
-         res = hid_get_manufacturer_string(handle, wstr, MAX_STR);
-         printf("Manufacturer String: %ls\n", wstr);
-
-         // Read the Product String
-         res = hid_get_product_string(handle, wstr, MAX_STR);
-         printf("Product String: %ls\n", wstr);
-
-         // Read the Serial Number String
-         res = hid_get_serial_number_string(handle, wstr, MAX_STR);
-         printf("Serial Number String: (%d) %ls\n", wstr[0], wstr);
-
-         // Read Indexed String 1
-         res = hid_get_indexed_string(handle, 1, wstr, MAX_STR);
-         printf("Indexed String 1: %ls\n", wstr);
-
-         // Toggle LED (cmd 0x80). The first byte is the report number (0x0).
-         buf[0] = 0xA1;
-         buf[1] = 0x22;
-         buf[2] = 0x64;
-         res = hid_write(handle, buf, 3);
-
-         printf("did state write");
-
-         // Request state (cmd 0x81). The first byte is the report number (0x0).
-         buf[0] = 0x80;
-         buf[1] = 0xFF;
-         buf[2] = 0x01;
-         buf[3] = 0xFF;
-         buf[4] = 0x01;
-         res = hid_write(handle, buf, 5);
-
-         // Read requested state
-         res = hid_read(handle, buf, 16);
-
-         // Print out the returned buffer.
-         for (i = 0; i < 4; i++)
-            printf("buf[%d]: %d\n", i, buf[i]);
-
-         // Close the device
-         hid_close(handle);
-
-         // Finalize the hidapi library
-         res = hid_exit();
-         
-         */
       }
    }
+
+   int ft260_interface::initialize_ft260_as_gpio(uint8_t handle_index)
+   {
+      uint8_t index = 0;
+
+      /*
+
+      // Toggle LED (cmd 0x80). The first byte is the report number (0x0).
+      buf[0] = 0xA1;
+      buf[1] = 0x22;
+      buf[2] = 0x64;
+      res = hid_write(handle, buf, 3);
+
+      printf("did state write");
+
+      // Request state (cmd 0x81). The first byte is the report number (0x0).
+      buf[0] = 0x80;
+      buf[1] = 0xFF;
+      buf[2] = 0x01;
+      buf[3] = 0xFF;
+      buf[4] = 0x01;
+      res = hid_write(handle, buf, 5);
+
+      // Read requested state
+      res = hid_read(handle, buf, 16);
+
+      // Print out the returned buffer.
+      for (i = 0; i < 4; i++)
+      printf("buf[%d]: %d\n", i, buf[i]);
+
+      // Close the device
+      hid_close(handle);
+
+      // Finalize the hidapi library
+      res = hid_exit();
+
+      */
+      return 0;
+   }
+
+   int ft260_interface::write_system_setting(uint8_t handle_index)
+   {
+      uint8_t index = 0;
+      buf[index++] = FT260_SYSTEM_SETTINGS;
+      buf[index++] = FT260_SET_CLOCK;
+      buf[index++] = FT260_I2C_CLOCK_48MHZ;
+
+      return 0;
+   }
+
 }

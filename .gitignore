@@ -32,3 +32,6 @@
 *.app
 
 lib/*
+
+# .view files
+*.view

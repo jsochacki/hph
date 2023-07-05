@@ -46,6 +46,10 @@ namespace hph
       ushort product_id;
    };
 
+   //Size Definition
+//   hph-emulation@hph-emulation:/usr/include/linux$ sudo grep -nir 'struct hid_device' /usr/src/linux-headers-5.15.0-76-generic/
+//   /usr/src/linux-headers-5.15.0-76-generic/scripts/mod/devicetable-offsets.h:22:#define SIZE_hid_device_id 24 /* sizeof(struct hid_device_id) */
+
    const char *const hid_bus_type_name[] = {"Unknown",
                                             "USB",
                                             "Bluetooth",

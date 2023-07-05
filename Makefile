@@ -13,6 +13,7 @@ INC_DIRS += /usr/local/include
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 LDFLAGS+=-lhidapi-hidraw
+# Need this for string library and wchar_t operations
 LDFLAGS+=-lstdc++
 
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
