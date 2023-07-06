@@ -6,6 +6,8 @@
 
 #include <hidapi/hidapi.h>
 
+#include <hidraw.h>
+
 // Headers needed for sleeping.
 #ifdef _WIN32
 	#include <windows.h>
@@ -68,4 +70,5 @@ namespace hph
                     hid_device_search_parameters dev_to_find,
                     char ** devices_found);
    wchar_t *utf8_to_wchar_t(const char *utf8);
+   int hid_set_output_report(hid_device *dev, unsigned char *data, size_t length);
 }

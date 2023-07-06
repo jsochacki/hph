@@ -7,16 +7,16 @@ namespace hph
    {
       char manufacturer_string[] = "FTDI";
       char product_string[] = "FT260";
-      ft260_device_parameters.manufacturer_string = utf8_to_wchar_t(manufacturer_string);
-      ft260_device_parameters.product_string = utf8_to_wchar_t(product_string);
-      ft260_device_parameters.vendor_id = hph_ft260_vendor_id;
-      ft260_device_parameters.product_id = hph_ft260_product_id;
+      device_parameters.manufacturer_string = utf8_to_wchar_t(manufacturer_string);
+      device_parameters.product_string = utf8_to_wchar_t(product_string);
+      device_parameters.vendor_id = hph_ft260_vendor_id;
+      device_parameters.product_id = hph_ft260_product_id;
 
       /*
-      printf("mfg string is %ls\n", ft260_device_parameters.manufacturer_string);
-      printf("product string is %ls\n", ft260_device_parameters.product_string);
-      printf("vendor id is %hu\n", ft260_device_parameters.vendor_id);
-      printf("product id is %hu\n", ft260_device_parameters.product_id);
+      printf("mfg string is %ls\n", device_parameters.manufacturer_string);
+      printf("product string is %ls\n", device_parameters.product_string);
+      printf("vendor id is %hu\n", device_parameters.vendor_id);
+      printf("product id is %hu\n", device_parameters.product_id);
       */
 
       printf("hph-hidapi. Compiled with hidapi version %s, runtime version %s.\n", HID_API_VERSION_STR, hid_version_str());
@@ -51,14 +51,14 @@ namespace hph
          printf("total hid devices found is %d\n", total_devices);
 
          char **devices_found = (char**) calloc(total_devices, sizeof(char*));
-         ft260_devices = get_devices(devs, ft260_device_parameters, devices_found);
+         devices = get_devices(devs, device_parameters, devices_found);
 
-         printf("ft260 hid devices found is %d\n", ft260_devices);
+         printf("ft260 hid devices found is %d\n", devices);
          printf("\n");
 
-         handles = (hid_device**) calloc(ft260_devices, sizeof(hid_device*));
+         handles = (hid_device**) calloc(devices, sizeof(hid_device*));
 
-         for(int i = 0; i < ft260_devices; ++i)
+         for(int i = 0; i < devices; ++i)
          {
             printf("ft260 device %d path is %s\n", i, devices_found[i]);
             printf("\n");
@@ -94,9 +94,13 @@ namespace hph
 
          hid_free_enumeration(devs);
       }
+
+      buffer_slots_used = 0;
    }
 
-   int ft260_interface::initialize_ft260_as_gpio(uint8_t handle_index)
+
+
+   int ft260_interface::initialize_as_gpio(uint8_t handle_index)
    {
       uint8_t index = 0;
 
@@ -137,12 +141,19 @@ namespace hph
 
    int ft260_interface::write_system_setting(uint8_t handle_index)
    {
-      uint8_t index = 0;
-      buf[index++] = FT260_SYSTEM_SETTINGS;
-      buf[index++] = FT260_SET_CLOCK;
-      buf[index++] = FT260_I2C_CLOCK_48MHZ;
+      res = hid_write(handles[handle_index], buf, buffer_slots_used);
+      if(res < 0)
+      {
+         printf("unable to send a feature report.\n");
+      }
+      buffer_slots_used = 0;
 
-      return 0;
+      return res;
+   }
+
+   uint8_t ft260_interface::i2c_data_report_id(uint8_t len)
+   {
+      return (i2c_report_min + ((len)-1) / 4);
    }
 
 }
