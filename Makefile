@@ -10,6 +10,7 @@ DEPS := $(OBJS:.o=.d)
 INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 #INC_DIRS += ./lib
 INC_DIRS += /usr/local/include
+#INC_DIRS += /usr/src/linux-hwe-5.15-headers-5.15.0-76/include
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 LDFLAGS+=-lhidapi-hidraw

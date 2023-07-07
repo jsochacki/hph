@@ -6,7 +6,7 @@
 
 #include <hidapi/hidapi.h>
 
-#include <hidraw.h>
+#include <hidapi/hidapi.h>
 
 // Headers needed for sleeping.
 #ifdef _WIN32
@@ -36,6 +36,16 @@
 #if defined(USING_HIDAPI_LIBUSB) && HID_API_VERSION >= HID_API_MAKE_VERSION(0, 12, 0)
 #include <hidapi_libusb.h>
 #endif
+
+//#ifndef HIDIOCSOUTPUT
+///* The first byte of SOUTPUT is the report number */
+//#define HIDIOCSOUTPUT(len)    _IOC(_IOC_WRITE|_IOC_READ, 'H', 0x0B, len)
+//#endif
+//#ifndef HIDIOCGOUTPUT
+///* The first byte of GOUTPUT is the report number */
+//#define HIDIOCGOUTPUT(len)    _IOC(_IOC_WRITE|_IOC_READ, 'H', 0x0C, len)
+//#endif
+
 
 namespace hph
 {

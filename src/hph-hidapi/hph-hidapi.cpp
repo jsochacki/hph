@@ -148,7 +148,7 @@ namespace hph
    {
       int res;
 
-      free(&dev->last_error_str);
+      free(dev->last_error_str);
       &dev->last_error_str = utf8_to_wchar_t(NULL);
 
       res = ioctl(dev->device_handle, HIDIOCSOUTPUT(length), data);
