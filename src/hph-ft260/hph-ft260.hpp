@@ -6,6 +6,8 @@
 
 #include "hph-hidapi.hpp"
 
+//#define HPH_FT260_INTERFACE_DEBUG
+
 namespace hph
 {
    typedef unsigned char uchar;
@@ -46,34 +48,29 @@ namespace hph
       public:
 
       ft260_interface();
-      ft260_interface(int* error_code_out);
+      ft260_interface(int **error_code_out);
+      ~ft260_interface();
 
-      int initialize_as_gpio(uint8_t handle_index);
-      int write_system_setting(uint8_t handle_index);
+      //int initialize_as_gpio(uint8_t handle_index);
 
-      private:
+      void reset_active_buffer(void);
 
-      uint8_t i2c_data_report_id(uint8_t len);
+      int write_data(uint8_t handle_index);
+      int read_data(uint8_t handle_index);
+      void print_read_data(int count);
 
-      int res;
-      int total_devices;
-      int devices;
+      int write_feature_report(uint8_t handle_index);
+      int read_feature_report(uint8_t handle_index);
 
-      unsigned char buf[hph_ft260_max_char_buf];
-      uint8_t buffer_slots_used;
+      void add_to_buffer(uchar value);
 
-      wchar_t wstr[hph_ft260_max_str_len];
+      int set_as_non_blocking(uint8_t handle_index);
+      int set_as_blocking(uint8_t handle_index);
 
-      struct hid_device_info* devs;
+      int get_device_count(void);
+      int is_device_blocking(uint8_t handle_index);
 
-      hid_device** handles;
-
-
-      hid_device_search_parameters device_parameters;
-
-      int* error_code;
-
-      enum
+      enum : uchar
       {
          mode_all  = 0x00,
          mode_i2c  = 0x01,
@@ -82,7 +79,7 @@ namespace hph
       };
 
       /* control pipe */
-      enum
+      enum : uchar
       {
          get_rqst_type = 0xa1,
          get_report    = 0x01,
@@ -92,7 +89,7 @@ namespace hph
       };
 
       /* report ids / feature in */
-      enum
+      enum : uchar
       {
          chip_version          = 0xa0,
          system_settings       = 0xa1,
@@ -108,7 +105,7 @@ namespace hph
       };
 
       /* feature out */
-      enum
+      enum : uchar
       {
          set_clock              = 0x01,
          set_i2c_mode           = 0x02,
@@ -135,7 +132,7 @@ namespace hph
       };
 
       /* response codes in i2c status report */
-      enum
+      enum : uchar
       {
          i2c_status_success     = 0x00,
          i2c_status_ctrl_busy   = 0x01,
@@ -148,7 +145,7 @@ namespace hph
       };
 
       /* i2c conditions flags */
-      enum
+      enum : uchar
       {
          flag_none                = 0x00,
          flag_start               = 0x02,
@@ -159,7 +156,7 @@ namespace hph
       };
 
       /* multi-function pin functions */
-      enum
+      enum : uchar
       {
          mfpin_gpio      = 0x00,
          mfpin_suspout   = 0x01,
@@ -170,7 +167,7 @@ namespace hph
          mfpin_bcd_det   = 0x06,
       };
 
-      enum
+      enum : uchar
       {
          gpio_value      = 0x00,
          gpio_direction  = 0x01,
@@ -179,7 +176,7 @@ namespace hph
       };
 
       /* GPIO offsets */
-      enum
+      enum : uint16_t // consider wchar_t if you have issues
       {
          gpio_0 = (1 << 0),
          gpio_1 = (1 << 1),
@@ -198,7 +195,7 @@ namespace hph
       };
 
       /* gpio groups */
-      enum
+      enum : uint16_t // consider wchar_t if you have issues
       {
          gpio_wakeup       = (gpio_3),
          gpio_i2c_default  = (gpio_0 | gpio_1),
@@ -208,12 +205,50 @@ namespace hph
          gpio_uart_default = (gpio_uart | gpio_uart_dcd_ri),
       };
 
-      enum
+      enum : uchar
       {
          i2c_clock_12mhz  = 0x00,
          i2c_clock_24mhz  = 0x01,
          i2c_clock_48mhz  = 0x02,
       };
+
+      enum : uchar
+      {
+         i2c_clock_speed_100kbps  = 0x64,
+         i2c_clock_speed_400kbps  = 0x01
+      };
+
+      enum : uchar
+      {
+         i2c_mode_disabled = 0x00,
+         i2c_mode_enabled = 0x01
+      };
+
+
+
+      private:
+
+      uint8_t i2c_data_report_id(uint8_t len);
+
+      int res;
+      int total_devices;
+      int devices;
+
+      unsigned char active_buffer[hph_ft260_max_char_buf];
+      uint8_t buffer_slots_used;
+
+      wchar_t wstr[hph_ft260_max_str_len];
+
+      struct hid_device_info* devs;
+
+      hid_device** handles;
+
+
+      hid_device_search_parameters device_parameters;
+
+      bool *is_blocking;
+
+      int **error_code;
    };
 
 }   // namespace hph

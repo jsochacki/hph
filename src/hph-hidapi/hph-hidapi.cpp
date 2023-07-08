@@ -143,20 +143,4 @@ namespace hph
 
       return ret;
    }
-
-   int hid_set_output_report(hid_device *dev, const unsigned char *data, size_t length)
-   {
-      int res;
-
-      free(dev->last_error_str);
-      &dev->last_error_str = utf8_to_wchar_t(NULL);
-
-      res = ioctl(dev->device_handle, HIDIOCSOUTPUT(length), data);
-      if (res < 0)
-      {
-         //register_device_error_format(dev, "ioctl (SOUTPUT): %s", strerror(errno));
-      }
-
-      return res;
-   }
 }

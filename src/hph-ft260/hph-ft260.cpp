@@ -2,9 +2,11 @@
 
 namespace hph
 {
-   ft260_interface::ft260_interface(int *error_code_out)
+   ft260_interface::ft260_interface(int **error_code_out)
       : error_code(error_code_out)
    {
+      devices = -1;
+
       char manufacturer_string[] = "FTDI";
       char product_string[] = "FT260";
       device_parameters.manufacturer_string = utf8_to_wchar_t(manufacturer_string);
@@ -33,7 +35,8 @@ namespace hph
       res = hid_init();
       if(res)
       {
-         *error_code = 1; // hid_init failure error
+         *error_code = (int*) calloc(1, sizeof(int));
+         *error_code[0] = 1; // hid_init failure error
       }
       else
       {
@@ -46,17 +49,23 @@ namespace hph
 
          devs = hid_enumerate(0x0, 0x0);
          total_devices = count_devices(devs);
-         //print_devices_with_descriptor(devs);
+
+#ifdef HPH_FT260_INTERFACE_DEBUG
+         print_devices_with_descriptor(devs);
+#endif
 
          printf("total hid devices found is %d\n", total_devices);
 
          char **devices_found = (char**) calloc(total_devices, sizeof(char*));
          devices = get_devices(devs, device_parameters, devices_found);
 
+         *error_code = (int*) calloc(devices, sizeof(int));
+
          printf("ft260 hid devices found is %d\n", devices);
          printf("\n");
 
          handles = (hid_device**) calloc(devices, sizeof(hid_device*));
+         is_blocking = (bool*) calloc(devices, sizeof(bool));
 
          for(int i = 0; i < devices; ++i)
          {
@@ -69,26 +78,78 @@ namespace hph
             {
                printf("Unable to open device\n");
                hid_exit();
-               *error_code = 2; // hid_device open failure error
+               (*error_code)[i] = 2; // hid_device open failure error
             }
             else
             {
+               wstr[0] = 0x0000;
                // Read the Manufacturer String
                res = hid_get_manufacturer_string(handles[i], wstr, hph_ft260_max_str_len);
+               if (res < 0)
+               {
+                  printf("Unable to read manufacturer string\n");
+               }
                printf("Manufacturer String: %ls\n", wstr);
 
                // Read the Product String
+               wstr[0] = 0x0000;
                res = hid_get_product_string(handles[i], wstr, hph_ft260_max_str_len);
+               if (res < 0)
+               {
+                  printf("Unable to read product string\n");
+               }
                printf("Product String: %ls\n", wstr);
 
                // Read the Serial Number String
+               wstr[0] = 0x0000;
                res = hid_get_serial_number_string(handles[i], wstr, hph_ft260_max_str_len);
+               if (res < 0)
+               {
+                  printf("Unable to read serial number string\n");
+               }
                printf("Serial Number String: (%d) %ls\n", wstr[0], wstr);
 
+#ifdef HPH_FT260_INTERFACE_DEBUG
+               print_hid_report_descriptor_from_device(handles[i]);
+
+
+               struct hid_device_info* info = hid_get_device_info(handles[i]);
+               if (info == NULL)
+               {
+                  printf("Unable to get device info\n");
+               }
+               else
+               {
+                  print_devices(info);
+               }
+
+
                // Read Indexed String 1
+               wstr[0] = 0x0000;
                res = hid_get_indexed_string(handles[i], 1, wstr, hph_ft260_max_str_len);
+               if (res < 0)
+               {
+                  printf("Unable to read indexed string 1\n");
+               }
                printf("Indexed String 1: %ls\n", wstr);
+#endif
                printf("\n");
+
+               //clear the device buffers
+               if(set_as_non_blocking(i) < 0)
+               {
+                  (*error_code)[i] = 3; // hid_device unable to change blocking state error
+               }
+
+               if(read_data(i) < 0)
+               {
+                  (*error_code)[i] = 4; // hid_device unable to read data error
+               }
+
+               if(set_as_blocking(i) < 0)
+               {
+                  (*error_code)[i] = 3; // hid_device unable to change blocking state error
+               }
             }
          }
 
@@ -98,57 +159,139 @@ namespace hph
       buffer_slots_used = 0;
    }
 
+   ft260_interface::~ft260_interface(void)
+   {
+      for(int i = 0; i < devices; ++i)
+      {
+         hid_close(handles[i]);
+      }
+      hid_exit();
+      printf("hph-ft260 exited\n");
+   }
 
-
+   /*
    int ft260_interface::initialize_as_gpio(uint8_t handle_index)
    {
       uint8_t index = 0;
 
-      /*
-
-      // Toggle LED (cmd 0x80). The first byte is the report number (0x0).
-      buf[0] = 0xA1;
-      buf[1] = 0x22;
-      buf[2] = 0x64;
-      res = hid_write(handle, buf, 3);
-
-      printf("did state write");
-
-      // Request state (cmd 0x81). The first byte is the report number (0x0).
-      buf[0] = 0x80;
-      buf[1] = 0xFF;
-      buf[2] = 0x01;
-      buf[3] = 0xFF;
-      buf[4] = 0x01;
-      res = hid_write(handle, buf, 5);
-
-      // Read requested state
-      res = hid_read(handle, buf, 16);
-
-      // Print out the returned buffer.
-      for (i = 0; i < 4; i++)
-      printf("buf[%d]: %d\n", i, buf[i]);
-
-      // Close the device
-      hid_close(handle);
-
-      // Finalize the hidapi library
-      res = hid_exit();
-
-      */
       return 0;
    }
+   */
 
-   int ft260_interface::write_system_setting(uint8_t handle_index)
+   void ft260_interface::reset_active_buffer(void)
    {
-      res = hid_write(handles[handle_index], buf, buffer_slots_used);
+      buffer_slots_used = 0;
+      memset(active_buffer, 0, sizeof(active_buffer));
+   }
+
+   int ft260_interface::write_data(uint8_t handle_index)
+   {
+      res = hid_write(handles[handle_index], active_buffer, buffer_slots_used);
       if(res < 0)
       {
-         printf("unable to send a feature report.\n");
+         printf("unable to write: %ls\n", hid_error(handles[handle_index]));
       }
-      buffer_slots_used = 0;
+      else
+      {
+         reset_active_buffer();
+      }
 
       return res;
+   }
+
+   int ft260_interface::read_data(uint8_t handle_index)
+   {
+      memset(active_buffer + 1, 0, sizeof(active_buffer) - 1);
+      res = hid_read(handles[handle_index], active_buffer, sizeof(active_buffer));
+      if(res < 0)
+      {
+         printf("unable to read: %ls\n", hid_error(handles[handle_index]));
+         reset_active_buffer();
+      }
+
+      return res;
+   }
+
+   void ft260_interface::print_read_data(int count)
+   {
+      for(int index = 0; index < count; ++index)
+      {
+         printf("%02x ", (unsigned int) active_buffer[index]);
+      }
+      printf("\n");
+   }
+
+   int ft260_interface::write_feature_report(uint8_t handle_index)
+   {
+      res = hid_send_feature_report(handles[handle_index], active_buffer, buffer_slots_used);
+      if(res < 0)
+      {
+         printf("unable to send feature report %02x: %ls\n", active_buffer[0], hid_error(handles[handle_index]));
+      }
+      else
+      {
+         reset_active_buffer();
+      }
+
+      return res;
+   }
+
+   int ft260_interface::read_feature_report(uint8_t handle_index)
+   {
+      memset(active_buffer + 1, 0, sizeof(active_buffer) - 1);
+      res = hid_get_feature_report(handles[handle_index], active_buffer, sizeof(active_buffer));
+      if(res < 0)
+      {
+         printf("unable to get feature report %02x: %ls\n", active_buffer[0], hid_error(handles[handle_index]));
+         reset_active_buffer();
+      }
+
+      return res;
+   }
+
+   void ft260_interface::add_to_buffer(uchar value)
+   {
+      active_buffer[buffer_slots_used++] = value;
+   }
+
+   int ft260_interface::set_as_non_blocking(uint8_t handle_index)
+   {
+      res = hid_set_nonblocking(handles[handle_index], 1);
+      if(res < 0)
+      {
+         printf("unable to set device handle %d to non-blocking because %ls\n",
+                handle_index, hid_error(handles[handle_index]));
+         return res;
+      }
+
+      is_blocking[handle_index] = false;
+
+      return res;
+   }
+
+   int ft260_interface::set_as_blocking(uint8_t handle_index)
+   {
+      res = hid_set_nonblocking(handles[handle_index], 0);
+      if(res < 0)
+      {
+         printf("unable to set device handle %d to blocking because %ls\n",
+                handle_index, hid_error(handles[handle_index]));
+         return res;
+      }
+
+      is_blocking[handle_index] = true;
+
+      return res;
+   }
+
+   int ft260_interface::get_device_count(void)
+   {
+      return devices;
+   }
+
+   int ft260_interface::is_device_blocking(uint8_t handle_index)
+   {
+      return is_blocking[handle_index];
    }
 
    uint8_t ft260_interface::i2c_data_report_id(uint8_t len)
