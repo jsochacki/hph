@@ -76,6 +76,7 @@ namespace hph
    int count_devices(struct hid_device_info *cur_dev);
    int get_devices(struct hid_device_info *cur_dev,
                     hid_device_search_parameters dev_to_find,
-                    char ** devices_found);
+                    char ** devices_found,
+                    int **corresponding_interface_number);
    wchar_t *utf8_to_wchar_t(const char *utf8);
 }

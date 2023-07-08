@@ -98,12 +98,13 @@ namespace hph
       return device_count;
    }
 
-   int get_devices(struct hid_device_info *cur_dev, hid_device_search_parameters dev_to_find, char **devices_found)
+   int get_devices(struct hid_device_info *cur_dev, hid_device_search_parameters dev_to_find, char **devices_found, int **corresponding_interface_number)
    {
+      int interfaces[255];
       int found_device_count = 0;
       std::wstring tempstr2(dev_to_find.manufacturer_string);
       std::wstring tempstr4(dev_to_find.product_string);
-      for (; cur_dev; cur_dev = cur_dev->next)
+      for(; cur_dev; cur_dev = cur_dev->next)
       {
          std::wstring tempstr1(cur_dev->manufacturer_string);
          std::wstring tempstr3(cur_dev->product_string);
@@ -117,9 +118,18 @@ namespace hph
             //so we can use strlen for length of char array
             devices_found[found_device_count]
                = (char*) calloc(strlen(cur_dev->path), sizeof(char));
+            interfaces[found_device_count] = cur_dev->interface_number;
             devices_found[found_device_count++] = cur_dev->path;
          }
       }
+
+      *corresponding_interface_number = (int*) calloc(found_device_count, sizeof(int));
+
+      for(int index = 0; index < found_device_count; ++index)
+      {
+         (*corresponding_interface_number)[index] = interfaces[index];
+      }
+
       return found_device_count;
    }
 

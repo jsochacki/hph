@@ -61,6 +61,7 @@ namespace hph
 
       int write_feature_report(uint8_t handle_index);
       int read_feature_report(uint8_t handle_index);
+      int read_input_report(uint8_t handle_index);
 
       void add_to_buffer(uchar value);
 
@@ -224,6 +225,17 @@ namespace hph
          i2c_mode_enabled = 0x01
       };
 
+      enum : uchar
+      {
+         suspend_output_active_high = 0x00,
+         suspend_output_active_low = 0x01
+      };
+
+      enum : uchar
+      {
+         uart_ri_wakeup_disabled = 0x00,
+         uart_ri_wakeup_enabled = 0x01
+      };
 
 
       private:
@@ -233,6 +245,7 @@ namespace hph
       int res;
       int total_devices;
       int devices;
+      int *corresponding_interface_number;
 
       unsigned char active_buffer[hph_ft260_max_char_buf];
       uint8_t buffer_slots_used;

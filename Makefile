@@ -12,7 +12,9 @@ INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_DIRS += /usr/local/include
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
-LDFLAGS+=-lhidapi-hidraw
+LDFLAGS+=-lhidapi-libusb
+#YOU MUST USE libusb OR ELSE YOU GET NO FUNCTIONALITY AND NO DUAL INTERFACE PRESENTATION
+#LDFLAGS+=-lhidapi-hidraw
 # Need this for string library and wchar_t operations
 LDFLAGS+=-lstdc++
 

@@ -57,20 +57,19 @@ namespace hph
          printf("total hid devices found is %d\n", total_devices);
 
          char **devices_found = (char**) calloc(total_devices, sizeof(char*));
-         devices = get_devices(devs, device_parameters, devices_found);
+         devices = get_devices(devs, device_parameters, devices_found, &corresponding_interface_number);
 
          *error_code = (int*) calloc(devices, sizeof(int));
 
          printf("ft260 hid devices found is %d\n", devices);
-         printf("\n");
 
          handles = (hid_device**) calloc(devices, sizeof(hid_device*));
          is_blocking = (bool*) calloc(devices, sizeof(bool));
 
          for(int i = 0; i < devices; ++i)
          {
-            printf("ft260 device %d path is %s\n", i, devices_found[i]);
             printf("\n");
+            printf("ft260 device %d path is %s\n", i, devices_found[i]);
 
             handles[i] = hid_open_path(devices_found[i]);
 
@@ -82,6 +81,8 @@ namespace hph
             }
             else
             {
+               printf("interface number %d\n", corresponding_interface_number[i]);
+
                wstr[0] = 0x0000;
                // Read the Manufacturer String
                res = hid_get_manufacturer_string(handles[i], wstr, hph_ft260_max_str_len);
@@ -223,6 +224,7 @@ namespace hph
 
    int ft260_interface::write_feature_report(uint8_t handle_index)
    {
+      //IF YOU DONT RUN WITH PERMISSION YOU WILL GET A SEGMENTATION FAULT
       res = hid_send_feature_report(handles[handle_index], active_buffer, buffer_slots_used);
       if(res < 0)
       {
@@ -239,6 +241,7 @@ namespace hph
    int ft260_interface::read_feature_report(uint8_t handle_index)
    {
       memset(active_buffer + 1, 0, sizeof(active_buffer) - 1);
+      //IF YOU DONT RUN WITH PERMISSION YOU WILL GET A SEGMENTATION FAULT
       res = hid_get_feature_report(handles[handle_index], active_buffer, sizeof(active_buffer));
       if(res < 0)
       {
@@ -249,9 +252,26 @@ namespace hph
       return res;
    }
 
+   int ft260_interface::read_input_report(uint8_t handle_index)
+   {
+      memset(active_buffer + 1, 0, sizeof(active_buffer) - 1);
+      //IF YOU DONT RUN WITH PERMISSION YOU WILL GET A SEGMENTATION FAULT
+      res = hid_get_input_report(handles[handle_index], active_buffer, sizeof(active_buffer));
+      if(res < 0)
+      {
+         printf("unable to get input report %02x: %ls\n", active_buffer[0], hid_error(handles[handle_index]));
+         reset_active_buffer();
+      }
+
+      return res;
+   }
+
    void ft260_interface::add_to_buffer(uchar value)
    {
       active_buffer[buffer_slots_used++] = value;
+#ifdef HPH_FT260_INTERFACE_DEBUG
+      printf("added %02x to buffer slot %d\n", value, buffer_slots_used - 1);
+#endif
    }
 
    int ft260_interface::set_as_non_blocking(uint8_t handle_index)
