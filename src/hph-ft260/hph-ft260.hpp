@@ -18,6 +18,7 @@ namespace hph
    const ushort hph_ft260_product_id   = 0x6030;
 
    const uint16_t ft260_gpio_max = 6;
+   const uint16_t ft260_gpio_extra_max = 8;
 
    const uint16_t ft260_max_report_length = 64;
 
@@ -37,7 +38,6 @@ namespace hph
    const ushort ft260_read_data_max = 180;
    const ushort ft260_write_data_max = 60;
 
-   const uint16_t ft260_gpio_extra_max = 8;
    constexpr uint16_t ft260_gpio_total = (ft260_gpio_max + ft260_gpio_extra_max);
    constexpr uint16_t ft260_gpio_mask = (static_cast<uint16_t>(~(static_cast<uint16_t>(0xffff) << ft260_gpio_total)));
 
@@ -70,6 +70,15 @@ namespace hph
 
       int get_device_count(void);
       int is_device_blocking(uint8_t handle_index);
+
+      uchar get_numbered_gpio_bitmask(void);
+      uchar get_lettered_gpio_bitmask(void);
+
+      void set_numbered_gpio_active(uchar bitmask);
+      void set_lettered_gpio_active(uchar bitmask);
+      void set_numbered_gpio_active(bool gpio_set[ft260_gpio_max]);
+      void set_lettered_gpio_active(bool gpio_set[ft260_gpio_extra_max]);
+
 
       enum : uchar
       {
@@ -177,26 +186,30 @@ namespace hph
       };
 
       /* GPIO offsets */
-      enum : uint16_t // consider wchar_t if you have issues
+      enum : uchar
       {
          gpio_0 = (1 << 0),
          gpio_1 = (1 << 1),
          gpio_2 = (1 << 2),
          gpio_3 = (1 << 3),
          gpio_4 = (1 << 4),
-         gpio_5 = (1 << 5),
-         gpio_a = (1 << (ft260_gpio_max + 0)),
-         gpio_b = (1 << (ft260_gpio_max + 1)),
-         gpio_c = (1 << (ft260_gpio_max + 2)),
-         gpio_d = (1 << (ft260_gpio_max + 3)),
-         gpio_e = (1 << (ft260_gpio_max + 4)),
-         gpio_f = (1 << (ft260_gpio_max + 5)),
-         gpio_g = (1 << (ft260_gpio_max + 6)),
-         gpio_h = (1 << (ft260_gpio_max + 7)),
+         gpio_5 = (1 << 5)
+      };
+
+      enum : uchar
+      {
+         gpio_a = (1 << 0),
+         gpio_b = (1 << 1),
+         gpio_c = (1 << 2),
+         gpio_d = (1 << 3),
+         gpio_e = (1 << 4),
+         gpio_f = (1 << 5),
+         gpio_g = (1 << 6),
+         gpio_h = (1 << 7)
       };
 
       /* gpio groups */
-      enum : uint16_t // consider wchar_t if you have issues
+      enum : uchar
       {
          gpio_wakeup       = (gpio_3),
          gpio_i2c_default  = (gpio_0 | gpio_1),
@@ -242,6 +255,9 @@ namespace hph
 
       uint8_t i2c_data_report_id(uint8_t len);
 
+      static uchar numbered_gpio_map[ft260_gpio_max];
+      static uchar lettered_gpio_map[ft260_gpio_extra_max];
+
       int res;
       int total_devices;
       int devices;
@@ -262,6 +278,9 @@ namespace hph
       bool *is_blocking;
 
       int **error_code;
+
+      bool numbered_gpio_active[ft260_gpio_max];
+      bool lettered_gpio_active[ft260_gpio_extra_max];
    };
 
 }   // namespace hph

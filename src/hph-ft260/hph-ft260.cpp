@@ -2,9 +2,23 @@
 
 namespace hph
 {
+
+   uchar ft260_interface::numbered_gpio_map[ft260_gpio_max] = {gpio_0, gpio_1, gpio_2, gpio_3, gpio_4, gpio_5};
+   uchar ft260_interface::lettered_gpio_map[ft260_gpio_extra_max] = {gpio_a, gpio_b, gpio_c, gpio_d, gpio_e, gpio_f, gpio_g, gpio_h};
+
    ft260_interface::ft260_interface(int **error_code_out)
       : error_code(error_code_out)
    {
+      for(uint8_t index = 0; index < ft260_gpio_max; ++index)
+      {
+         numbered_gpio_active[index] = false;
+      }
+
+      for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
+      {
+         lettered_gpio_active[index] = false;
+      }
+
       devices = -1;
 
       char manufacturer_string[] = "FTDI";
@@ -317,6 +331,84 @@ namespace hph
    uint8_t ft260_interface::i2c_data_report_id(uint8_t len)
    {
       return (i2c_report_min + ((len)-1) / 4);
+   }
+
+   uchar ft260_interface::get_numbered_gpio_bitmask(void)
+   {
+      uchar bitmask = 0x00;
+
+      for(uint8_t index = 0; index < ft260_gpio_max; ++index)
+      {
+         if(numbered_gpio_active[index])
+         {
+            bitmask |= numbered_gpio_map[index];
+         }
+      }
+
+      return bitmask;
+   }
+
+   uchar ft260_interface::get_lettered_gpio_bitmask(void)
+   {
+      uchar bitmask = 0x00;
+
+      for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
+      {
+         if(lettered_gpio_active[index])
+         {
+            bitmask |= lettered_gpio_map[index];
+         }
+      }
+
+      return bitmask;
+   }
+
+   void ft260_interface::set_numbered_gpio_active(uchar bitmask)
+   {
+      for(uint8_t index = 0; index < ft260_gpio_max; ++index)
+      {
+         numbered_gpio_active[index] = false;
+         if((bitmask & (0x01 << index)) != 0)
+         {
+            numbered_gpio_active[index] = true;
+         }
+      }
+   }
+
+   void ft260_interface::set_lettered_gpio_active(uchar bitmask)
+   {
+      for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
+      {
+         lettered_gpio_active[index] = false;
+         if((bitmask & (0x01 << index)) != 0)
+         {
+            lettered_gpio_active[index] = true;
+         }
+      }
+   }
+
+   void ft260_interface::set_numbered_gpio_active(bool gpio_set[ft260_gpio_max])
+   {
+      for(uint8_t index = 0; index < ft260_gpio_max; ++index)
+      {
+         numbered_gpio_active[index] = false;
+         if(gpio_set[index] == true)
+         {
+            numbered_gpio_active[index] = true;
+         }
+      }
+   }
+
+   void ft260_interface::set_lettered_gpio_active(bool gpio_set[ft260_gpio_extra_max])
+   {
+      for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
+      {
+         lettered_gpio_active[index] = false;
+         if(gpio_set[index] == true)
+         {
+            lettered_gpio_active[index] = true;
+         }
+      }
    }
 
 }
