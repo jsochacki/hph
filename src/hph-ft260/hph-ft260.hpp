@@ -48,7 +48,7 @@ namespace hph
       public:
 
       ft260_interface();
-      ft260_interface(int **error_code_out);
+      ft260_interface(char *device_paths_in[], int **error_code_out);
       ~ft260_interface();
 
       //int initialize_as_gpio(uint8_t handle_index);
@@ -71,14 +71,20 @@ namespace hph
       int get_device_count(void);
       int is_device_blocking(uint8_t handle_index);
 
-      uchar get_numbered_gpio_bitmask(void);
-      uchar get_lettered_gpio_bitmask(void);
+      uchar get_numbered_gpio_bitmask(uint8_t handle_index);
+      uchar get_lettered_gpio_bitmask(uint8_t handle_index);
 
-      void set_numbered_gpio_active(uchar bitmask);
-      void set_lettered_gpio_active(uchar bitmask);
-      void set_numbered_gpio_active(bool gpio_set[ft260_gpio_max]);
-      void set_lettered_gpio_active(bool gpio_set[ft260_gpio_extra_max]);
+      void set_numbered_gpio_active(uint8_t handle_index, uchar bitmask);
+      void set_lettered_gpio_active(uint8_t handle_index, uchar bitmask);
+      void set_numbered_gpio_active(uint8_t handle_index, bool gpio_set[ft260_gpio_max]);
+      void set_lettered_gpio_active(uint8_t handle_index, bool gpio_set[ft260_gpio_extra_max]);
 
+      /*
+      void read_numbered_gpio_select(uchar bitmask);
+      void read_numbered_gpio_value(uchar bitmask);
+      void write_numbered_gpio_select(uchar bitmask);
+      void write_numbered_gpio_value(uchar bitmask);
+      */
 
       enum : uchar
       {
@@ -253,6 +259,9 @@ namespace hph
 
       private:
 
+      void open_device(uint8_t device_handle, uint8_t device_index);
+      bool find_device(uint8_t device_handle);
+
       uint8_t i2c_data_report_id(uint8_t len);
 
       static uchar numbered_gpio_map[ft260_gpio_max];
@@ -277,10 +286,15 @@ namespace hph
 
       bool *is_blocking;
 
+      char **devices_found;
+      char **device_paths;
       int **error_code;
 
-      bool numbered_gpio_active[ft260_gpio_max];
-      bool lettered_gpio_active[ft260_gpio_extra_max];
+      bool **numbered_gpio_active;
+      bool **lettered_gpio_active;
+
+      uint8_t devices_to_be_opened;
+      uint8_t devices_to_be_opened_found;
    };
 
 }   // namespace hph

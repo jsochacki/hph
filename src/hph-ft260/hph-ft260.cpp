@@ -6,19 +6,9 @@ namespace hph
    uchar ft260_interface::numbered_gpio_map[ft260_gpio_max] = {gpio_0, gpio_1, gpio_2, gpio_3, gpio_4, gpio_5};
    uchar ft260_interface::lettered_gpio_map[ft260_gpio_extra_max] = {gpio_a, gpio_b, gpio_c, gpio_d, gpio_e, gpio_f, gpio_g, gpio_h};
 
-   ft260_interface::ft260_interface(int **error_code_out)
-      : error_code(error_code_out)
+   ft260_interface::ft260_interface(char *device_paths_in[], int **error_code_out)
+      : device_paths(device_paths_in), error_code(error_code_out)
    {
-      for(uint8_t index = 0; index < ft260_gpio_max; ++index)
-      {
-         numbered_gpio_active[index] = false;
-      }
-
-      for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
-      {
-         lettered_gpio_active[index] = false;
-      }
-
       devices = -1;
 
       char manufacturer_string[] = "FTDI";
@@ -70,105 +60,86 @@ namespace hph
 
          printf("total hid devices found is %d\n", total_devices);
 
-         char **devices_found = (char**) calloc(total_devices, sizeof(char*));
+         devices_found = (char**) calloc(total_devices, sizeof(char*));
          devices = get_devices(devs, device_parameters, devices_found, &corresponding_interface_number);
 
          *error_code = (int*) calloc(devices, sizeof(int));
+
+         numbered_gpio_active = (bool**) calloc(total_devices, sizeof(bool*));
+         lettered_gpio_active = (bool**) calloc(total_devices, sizeof(bool*));
+
+         for(uint8_t device_number = 0; device_number < devices; ++device_number)
+         {
+            numbered_gpio_active[device_number] = (bool*) calloc(ft260_gpio_max, sizeof(bool));
+            lettered_gpio_active[device_number] = (bool*) calloc(ft260_gpio_extra_max, sizeof(bool));
+
+            for(uint8_t index = 0; index < ft260_gpio_max; ++index)
+            {
+               numbered_gpio_active[device_number][index] = false;
+            }
+
+            for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
+            {
+               lettered_gpio_active[device_number][index] = false;
+            }
+         }
 
          printf("ft260 hid devices found is %d\n", devices);
 
          handles = (hid_device**) calloc(devices, sizeof(hid_device*));
          is_blocking = (bool*) calloc(devices, sizeof(bool));
 
-         for(int i = 0; i < devices; ++i)
+         devices_to_be_opened = 0;
+         devices_to_be_opened_found = 0;
+
+         if(strcmp(device_paths[0],"all") != 0)
          {
-            printf("\n");
-            printf("ft260 device %d path is %s\n", i, devices_found[i]);
-
-            handles[i] = hid_open_path(devices_found[i]);
-
-            if (!handles[i])
+            while(strcmp(device_paths[devices_to_be_opened],"") != 0)
             {
-               printf("Unable to open device\n");
-               hid_exit();
-               (*error_code)[i] = 2; // hid_device open failure error
+               ++devices_to_be_opened;
             }
-            else
+
+            if(devices_to_be_opened != 0)
             {
-               printf("interface number %d\n", corresponding_interface_number[i]);
-
-               wstr[0] = 0x0000;
-               // Read the Manufacturer String
-               res = hid_get_manufacturer_string(handles[i], wstr, hph_ft260_max_str_len);
-               if (res < 0)
+               int handle_number = 0;
+               for(int i = 0; i < devices; ++i)
                {
-                  printf("Unable to read manufacturer string\n");
-               }
-               printf("Manufacturer String: %ls\n", wstr);
+                  bool device_found = find_device(i);
 
-               // Read the Product String
-               wstr[0] = 0x0000;
-               res = hid_get_product_string(handles[i], wstr, hph_ft260_max_str_len);
-               if (res < 0)
-               {
-                  printf("Unable to read product string\n");
-               }
-               printf("Product String: %ls\n", wstr);
-
-               // Read the Serial Number String
-               wstr[0] = 0x0000;
-               res = hid_get_serial_number_string(handles[i], wstr, hph_ft260_max_str_len);
-               if (res < 0)
-               {
-                  printf("Unable to read serial number string\n");
-               }
-               printf("Serial Number String: (%d) %ls\n", wstr[0], wstr);
-
-#ifdef HPH_FT260_INTERFACE_DEBUG
-               print_hid_report_descriptor_from_device(handles[i]);
-
-
-               struct hid_device_info* info = hid_get_device_info(handles[i]);
-               if (info == NULL)
-               {
-                  printf("Unable to get device info\n");
-               }
-               else
-               {
-                  print_devices(info);
-               }
-
-
-               // Read Indexed String 1
-               wstr[0] = 0x0000;
-               res = hid_get_indexed_string(handles[i], 1, wstr, hph_ft260_max_str_len);
-               if (res < 0)
-               {
-                  printf("Unable to read indexed string 1\n");
-               }
-               printf("Indexed String 1: %ls\n", wstr);
-#endif
-               printf("\n");
-
-               //clear the device buffers
-               if(set_as_non_blocking(i) < 0)
-               {
-                  (*error_code)[i] = 3; // hid_device unable to change blocking state error
-               }
-
-               if(read_data(i) < 0)
-               {
-                  (*error_code)[i] = 4; // hid_device unable to read data error
-               }
-
-               if(set_as_blocking(i) < 0)
-               {
-                  (*error_code)[i] = 3; // hid_device unable to change blocking state error
+                  if(device_found)
+                  {
+                     printf("\n");
+                     printf("ft260 device %d is handle %d and path is %s\n", i, handle_number, devices_found[i]);
+                     open_device(handle_number++, i);
+                  }
+                  else
+                  {
+                     (*error_code)[i] = 5; // hid_device to be opened not found
+                  }
                }
             }
          }
+         else
+         {
+            for(int i = 0; i < devices; ++i)
+            {
+               printf("\n");
+               printf("ft260 device %d path is %s\n", i, devices_found[i]);
+               open_device(i, i);
+            }
+         }
 
+         printf("\n");
          hid_free_enumeration(devs);
+      }
+
+      if(devices_to_be_opened_found != devices_to_be_opened)
+      {
+         for(int i = 0; i < devices; ++i)
+         {
+            (*error_code)[i] = 5; // hid_device to be opened not found
+         }
+         exit(0);
       }
 
       buffer_slots_used = 0;
@@ -192,6 +163,124 @@ namespace hph
       return 0;
    }
    */
+
+   void ft260_interface::open_device(uint8_t device_handle, uint8_t device_index)
+   {
+      handles[device_handle] = hid_open_path(devices_found[device_index]);
+
+      if (!handles[device_handle])
+      {
+         printf("Unable to open device\n");
+         hid_exit();
+         (*error_code)[device_handle] = 2; // hid_device open failure error
+      }
+      else
+      {
+         printf("interface number %d\n", corresponding_interface_number[device_index]);
+
+         wstr[0] = 0x0000;
+         // Read the Manufacturer String
+         res = hid_get_manufacturer_string(handles[device_handle], wstr, hph_ft260_max_str_len);
+         if (res < 0)
+         {
+            printf("Unable to read manufacturer string\n");
+         }
+         printf("Manufacturer String: %ls\n", wstr);
+
+         // Read the Product String
+         wstr[0] = 0x0000;
+         res = hid_get_product_string(handles[device_handle], wstr, hph_ft260_max_str_len);
+         if (res < 0)
+         {
+            printf("Unable to read product string\n");
+         }
+         printf("Product String: %ls\n", wstr);
+
+         // Read the Serial Number String
+         wstr[0] = 0x0000;
+         res = hid_get_serial_number_string(handles[device_handle], wstr, hph_ft260_max_str_len);
+         if (res < 0)
+         {
+            printf("Unable to read serial number string\n");
+         }
+         printf("Serial Number String: (%d) %ls\n", wstr[0], wstr);
+
+#ifdef HPH_FT260_INTERFACE_DEBUG
+         print_hid_report_descriptor_from_device(handles[device_handle]);
+
+
+         struct hid_device_info* info = hid_get_device_info(handles[device_handle]);
+         if (info == NULL)
+         {
+            printf("Unable to get device info\n");
+         }
+         else
+         {
+            print_devices(info);
+         }
+
+
+         // Read Indexed String 1
+         wstr[0] = 0x0000;
+         res = hid_get_indexed_string(handles[device_handle], 1, wstr, hph_ft260_max_str_len);
+         if (res < 0)
+         {
+            printf("Unable to read indexed string 1\n");
+         }
+         printf("Indexed String 1: %ls\n", wstr);
+#endif
+         printf("\n");
+
+         //clear the device buffers
+         if(set_as_non_blocking(device_handle) < 0)
+         {
+            (*error_code)[device_handle] = 3; // hid_device unable to change blocking state error
+         }
+
+         add_to_buffer(chip_version);
+         if(read_data(device_handle) < 0)
+         {
+            (*error_code)[device_handle] = 4; // hid_device unable to read data error
+         }
+         reset_active_buffer();
+
+
+         if(set_as_blocking(device_handle) < 0)
+         {
+            (*error_code)[device_handle] = 3; // hid_device unable to change blocking state error
+         }
+      }
+   }
+
+   bool ft260_interface::find_device(uint8_t device_handle)
+   {
+      bool device_found = false;
+      uint8_t test_device = 0;
+      while(!device_found)
+      {
+         if(strcmp(device_paths[test_device], devices_found[device_handle]) == 0)
+         {
+            ++devices_to_be_opened_found;
+            device_found = true;
+         }
+         else
+         {
+            ++test_device;
+
+            if(test_device >= devices_to_be_opened)
+            {
+               //registering an error code makes no sense as there is no
+               //handle to associate said error with so just print the
+               //issue
+               printf("\n");
+               printf("ft260 device %d at path %s is not in list of devices to open\n", device_handle, devices_found[device_handle]);
+               break;
+            }
+         }
+      }
+
+      return device_found;
+   }
 
    void ft260_interface::reset_active_buffer(void)
    {
@@ -333,13 +422,13 @@ namespace hph
       return (i2c_report_min + ((len)-1) / 4);
    }
 
-   uchar ft260_interface::get_numbered_gpio_bitmask(void)
+   uchar ft260_interface::get_numbered_gpio_bitmask(uint8_t handle_index)
    {
       uchar bitmask = 0x00;
 
       for(uint8_t index = 0; index < ft260_gpio_max; ++index)
       {
-         if(numbered_gpio_active[index])
+         if(numbered_gpio_active[handle_index][index])
          {
             bitmask |= numbered_gpio_map[index];
          }
@@ -348,13 +437,13 @@ namespace hph
       return bitmask;
    }
 
-   uchar ft260_interface::get_lettered_gpio_bitmask(void)
+   uchar ft260_interface::get_lettered_gpio_bitmask(uint8_t handle_index)
    {
       uchar bitmask = 0x00;
 
       for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
       {
-         if(lettered_gpio_active[index])
+         if(lettered_gpio_active[handle_index][index])
          {
             bitmask |= lettered_gpio_map[index];
          }
@@ -363,52 +452,66 @@ namespace hph
       return bitmask;
    }
 
-   void ft260_interface::set_numbered_gpio_active(uchar bitmask)
+   void ft260_interface::set_numbered_gpio_active(uint8_t handle_index, uchar bitmask)
    {
       for(uint8_t index = 0; index < ft260_gpio_max; ++index)
       {
-         numbered_gpio_active[index] = false;
+         numbered_gpio_active[handle_index][index] = false;
          if((bitmask & (0x01 << index)) != 0)
          {
-            numbered_gpio_active[index] = true;
+            numbered_gpio_active[handle_index][index] = true;
          }
       }
    }
 
-   void ft260_interface::set_lettered_gpio_active(uchar bitmask)
+   void ft260_interface::set_lettered_gpio_active(uint8_t handle_index, uchar bitmask)
    {
       for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
       {
-         lettered_gpio_active[index] = false;
+         lettered_gpio_active[handle_index][index] = false;
          if((bitmask & (0x01 << index)) != 0)
          {
-            lettered_gpio_active[index] = true;
+            lettered_gpio_active[handle_index][index] = true;
          }
       }
    }
 
-   void ft260_interface::set_numbered_gpio_active(bool gpio_set[ft260_gpio_max])
+   void ft260_interface::set_numbered_gpio_active(uint8_t handle_index, bool gpio_set[ft260_gpio_max])
    {
       for(uint8_t index = 0; index < ft260_gpio_max; ++index)
       {
-         numbered_gpio_active[index] = false;
+         numbered_gpio_active[handle_index][index] = false;
          if(gpio_set[index] == true)
          {
-            numbered_gpio_active[index] = true;
+            numbered_gpio_active[handle_index][index] = true;
          }
       }
    }
 
-   void ft260_interface::set_lettered_gpio_active(bool gpio_set[ft260_gpio_extra_max])
+   void ft260_interface::set_lettered_gpio_active(uint8_t handle_index, bool gpio_set[ft260_gpio_extra_max])
    {
       for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
       {
-         lettered_gpio_active[index] = false;
+         lettered_gpio_active[handle_index][index] = false;
          if(gpio_set[index] == true)
          {
-            lettered_gpio_active[index] = true;
+            lettered_gpio_active[handle_index][index] = true;
          }
       }
    }
+
+   /*
+   void ft260_interface::read_numbered_gpio_select(uint8_t handle_index, uchar bitmask)
+   {
+      for(uint8_t index = 0; index < ft260_gpio_max; ++index)
+      {
+         numbered_gpio_active[handle_index][index] = false;
+         if((bitmask & (0x01 << index)) != 0)
+         {
+            numbered_gpio_active[handle_index][index] = true;
+         }
+      }
+   }
+   */
 
 }

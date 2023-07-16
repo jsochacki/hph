@@ -7,8 +7,11 @@ int main(int argc, char* argv[])
    int *ft260s_error_codes;
 
    int device_count;
+   char *device_paths_to_open[] = {"2-2.3:1.0", "2-2.2:1.1", ""};
+   //char *device_paths_to_open[] = {""};
+   //char *device_paths_to_open[] = {"all"};
 
-   hph::ft260_interface ft260s(&ft260s_error_codes);
+   hph::ft260_interface ft260s(device_paths_to_open, &ft260s_error_codes);
 
    device_count = ft260s.get_device_count();
    printf("device count is %d\n", device_count);
@@ -29,26 +32,29 @@ int main(int argc, char* argv[])
    ft260s.set_as_non_blocking(1);
    */
 
-   ft260s.set_numbered_gpio_active(0b00000101);
-   ft260s.set_lettered_gpio_active(0b00001001);
+   for(int i = 0; i < device_count; ++i)
+   {
+      ft260s.set_numbered_gpio_active(i, 0b00000101);
+      ft260s.set_lettered_gpio_active(i, 0b00001001);
 
-   hph::uchar nbm = ft260s.get_numbered_gpio_bitmask();
-   hph::uchar lbm = ft260s.get_lettered_gpio_bitmask();
+      hph::uchar nbm = ft260s.get_numbered_gpio_bitmask(i);
+      hph::uchar lbm = ft260s.get_lettered_gpio_bitmask(i);
 
-   printf("nbm is %02x\n", nbm);
-   printf("lbm is %02x\n", lbm);
+      printf("nbm is %02x\n", nbm);
+      printf("lbm is %02x\n", lbm);
 
-   bool nbm_set[hph::ft260_gpio_max] = {true, true, true, false, false, false};
-   bool lbm_set[hph::ft260_gpio_extra_max] = {true, false, true, false, true, false, false, false};
+      bool nbm_set[hph::ft260_gpio_max] = {true, true, true, false, false, false};
+      bool lbm_set[hph::ft260_gpio_extra_max] = {true, false, true, false, true, false, false, false};
 
-   ft260s.set_numbered_gpio_active(nbm_set);
-   ft260s.set_lettered_gpio_active(lbm_set);
+      ft260s.set_numbered_gpio_active(i, nbm_set);
+      ft260s.set_lettered_gpio_active(i, lbm_set);
 
-   nbm = ft260s.get_numbered_gpio_bitmask();
-   lbm = ft260s.get_lettered_gpio_bitmask();
+      nbm = ft260s.get_numbered_gpio_bitmask(i);
+      lbm = ft260s.get_lettered_gpio_bitmask(i);
 
-   printf("nbm is %02x\n", nbm);
-   printf("lbm is %02x\n", lbm);
+      printf("nbm is %02x\n", nbm);
+      printf("lbm is %02x\n", lbm);
+   }
 
 //
 //   for(int i = 0; i < device_count; ++i)
