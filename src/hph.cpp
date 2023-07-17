@@ -7,9 +7,9 @@ int main(int argc, char* argv[])
    int *ft260s_error_codes;
 
    int device_count;
-   char *device_paths_to_open[] = {"2-2.3:1.0", "2-2.2:1.1", ""};
-   //char *device_paths_to_open[] = {""};
-   //char *device_paths_to_open[] = {"all"};
+   const char *device_paths_to_open[] = {"2-2.3:1.0", "2-2.2:1.1", ""};
+   //const char *device_paths_to_open[] = {""};
+   //const char *device_paths_to_open[] = {"all"};
 
    hph::ft260_interface ft260s(device_paths_to_open, &ft260s_error_codes);
 

@@ -6,7 +6,7 @@ namespace hph
    uchar ft260_interface::numbered_gpio_map[ft260_gpio_max] = {gpio_0, gpio_1, gpio_2, gpio_3, gpio_4, gpio_5};
    uchar ft260_interface::lettered_gpio_map[ft260_gpio_extra_max] = {gpio_a, gpio_b, gpio_c, gpio_d, gpio_e, gpio_f, gpio_g, gpio_h};
 
-   ft260_interface::ft260_interface(char *device_paths_in[], int **error_code_out)
+   ft260_interface::ft260_interface(const char *device_paths_in[], int **error_code_out)
       : device_paths(device_paths_in), error_code(error_code_out)
    {
       devices = -1;
@@ -25,15 +25,7 @@ namespace hph
       printf("product id is %hu\n", device_parameters.product_id);
       */
 
-      printf("hph-hidapi. Compiled with hidapi version %s, runtime version %s.\n", HID_API_VERSION_STR, hid_version_str());
-      if (HID_API_VERSION == HID_API_MAKE_VERSION(hid_version()->major, hid_version()->minor, hid_version()->patch))
-      {
-         printf("Compile-time version matches runtime version of hidapi.\n\n");
-      }
-      else
-      {
-         printf("Compile-time version is different than runtime version of hidapi.\n]n");
-      }
+      hid_api_check();
 
       // Initialize the hidapi library
       res = hid_init();
@@ -163,6 +155,19 @@ namespace hph
       return 0;
    }
    */
+
+   void ft260_interface::hid_api_check(void)
+   {
+      printf("hph-hidapi. Compiled with hidapi version %s, runtime version %s.\n", HID_API_VERSION_STR, hid_version_str());
+      if (HID_API_VERSION == HID_API_MAKE_VERSION(hid_version()->major, hid_version()->minor, hid_version()->patch))
+      {
+         printf("Compile-time version matches runtime version of hidapi.\n\n");
+      }
+      else
+      {
+         printf("Compile-time version is different than runtime version of hidapi.\n]n");
+      }
+   }
 
    void ft260_interface::open_device(uint8_t device_handle, uint8_t device_index)
    {

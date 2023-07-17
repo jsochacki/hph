@@ -48,7 +48,7 @@ namespace hph
       public:
 
       ft260_interface();
-      ft260_interface(char *device_paths_in[], int **error_code_out);
+      ft260_interface(const char *device_paths_in[], int **error_code_out);
       ~ft260_interface();
 
       //int initialize_as_gpio(uint8_t handle_index);
@@ -259,6 +259,7 @@ namespace hph
 
       private:
 
+      void hid_api_check(void);
       void open_device(uint8_t device_handle, uint8_t device_index);
       bool find_device(uint8_t device_handle);
 
@@ -287,7 +288,7 @@ namespace hph
       bool *is_blocking;
 
       char **devices_found;
-      char **device_paths;
+      const char **device_paths;
       int **error_code;
 
       bool **numbered_gpio_active;
