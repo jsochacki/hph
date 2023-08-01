@@ -10,6 +10,15 @@ namespace hph
       : device_paths(device_paths_in), error_code(error_code_out)
    {
       devices = -1;
+      int hid_devices = 0;
+
+      int *temporary_error_codes;
+      int temporary_error_code_counter = 0;
+
+      hid_device** temporary_handles;
+
+      devices_to_be_opened = 0;
+      devices_to_be_opened_found = 0;
 
       char manufacturer_string[] = "FTDI";
       char product_string[] = "FT260";
@@ -24,6 +33,9 @@ namespace hph
       printf("vendor id is %hu\n", device_parameters.vendor_id);
       printf("product id is %hu\n", device_parameters.product_id);
       */
+
+      printf("NOTE: if the program terminates after throwing an instance of "
+             "std::logic_error you didnt run it with sudo\n\n");
 
       hid_api_check();
 
@@ -46,43 +58,19 @@ namespace hph
          devs = hid_enumerate(0x0, 0x0);
          total_devices = count_devices(devs);
 
-#ifdef HPH_FT260_INTERFACE_DEBUG
+         #ifdef HPH_FT260_INTERFACE_DEBUG
          print_devices_with_descriptor(devs);
-#endif
+         #endif
 
          printf("total hid devices found is %d\n", total_devices);
 
          devices_found = (char**) calloc(total_devices, sizeof(char*));
-         devices = get_devices(devs, device_parameters, devices_found, &corresponding_interface_number);
+         hid_devices = get_devices(devs, device_parameters, devices_found, &corresponding_interface_number);
 
-         *error_code = (int*) calloc(devices, sizeof(int));
+         printf("ft260 hid devices found is %d\n", hid_devices);
 
-         numbered_gpio_active = (bool**) calloc(total_devices, sizeof(bool*));
-         lettered_gpio_active = (bool**) calloc(total_devices, sizeof(bool*));
-
-         for(uint8_t device_number = 0; device_number < devices; ++device_number)
-         {
-            numbered_gpio_active[device_number] = (bool*) calloc(ft260_gpio_max, sizeof(bool));
-            lettered_gpio_active[device_number] = (bool*) calloc(ft260_gpio_extra_max, sizeof(bool));
-
-            for(uint8_t index = 0; index < ft260_gpio_max; ++index)
-            {
-               numbered_gpio_active[device_number][index] = false;
-            }
-
-            for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
-            {
-               lettered_gpio_active[device_number][index] = false;
-            }
-         }
-
-         printf("ft260 hid devices found is %d\n", devices);
-
-         handles = (hid_device**) calloc(devices, sizeof(hid_device*));
-         is_blocking = (bool*) calloc(devices, sizeof(bool));
-
-         devices_to_be_opened = 0;
-         devices_to_be_opened_found = 0;
+         temporary_error_codes = (int *) calloc(hid_devices, sizeof(int));
+         handles = (hid_device**) calloc(hid_devices, sizeof(hid_device*));
 
          if(strcmp(device_paths[0],"all") != 0)
          {
@@ -94,7 +82,7 @@ namespace hph
             if(devices_to_be_opened != 0)
             {
                int handle_number = 0;
-               for(int i = 0; i < devices; ++i)
+               for(int i = 0; i < hid_devices; ++i)
                {
                   bool device_found = find_device(i);
 
@@ -102,22 +90,24 @@ namespace hph
                   {
                      printf("\n");
                      printf("ft260 device %d is handle %d and path is %s\n", i, handle_number, devices_found[i]);
-                     open_device(handle_number++, i);
+                     temporary_error_codes[i] = open_device(handle_number++, i);
                   }
                   else
                   {
-                     (*error_code)[i] = 5; // hid_device to be opened not found
+                     //signify that this device is not used
+                     temporary_error_codes[i] = -1;
                   }
                }
             }
          }
          else
          {
-            for(int i = 0; i < devices; ++i)
+            initialize_gpio(hid_devices);
+            for(int i = 0; i < hid_devices; ++i)
             {
                printf("\n");
                printf("ft260 device %d path is %s\n", i, devices_found[i]);
-               open_device(i, i);
+               temporary_error_codes[i] = open_device(i, i);
             }
          }
 
@@ -127,22 +117,62 @@ namespace hph
 
       if(devices_to_be_opened_found != devices_to_be_opened)
       {
-         for(int i = 0; i < devices; ++i)
+         int devices_to_be_opened_found_check = 0;
+
+         for(int i = 0; i < hid_devices; ++i)
+         {
+            devices_to_be_opened_found_check += ((temporary_error_codes[i] != -1) ? 1 : 0);
+         }
+
+         if(devices_to_be_opened_found_check != devices_to_be_opened_found)
+         {
+            printf("UNEXPECTED ERROR, EXITING\n");
+            exit(0);
+         }
+
+         initialize_gpio(devices_to_be_opened_found_check);
+
+         //need loop to initialize from temp values
+         //*error_code = (int*) calloc(devices_to_be_opened_found_check, sizeof(int));
+         //handles = (hid_device**) calloc(hid_devices, sizeof(hid_device*));
+
+
+         for(int i = 0; i < hid_devices; ++i)
          {
             (*error_code)[i] = 5; // hid_device to be opened not found
          }
-         exit(0);
+         printf("DEVICES THAT WERE INTENDED TO BE OPENED WERE NOT FOUND!!!\n");
+         printf("WE WILL NOT ABORT BUT INTENDED EFFECT IS HIGHLY LIKELY NOT TO BE ACCOMPLISHED.\n");
+      }
+      else
+      {
+         //need loop to initialize from temp values
+         //*error_code = (int*) calloc(devices_to_be_opened_found_check, sizeof(int));
+         //handles = (hid_device**) calloc(hid_devices, sizeof(hid_device*));
+         initialize_gpio(hid_devices);
       }
 
       buffer_slots_used = 0;
+
+      free(temporary_error_codes);
+      free(temporary_handles);
    }
 
    ft260_interface::~ft260_interface(void)
    {
+      free(error_code);
+
       for(int i = 0; i < devices; ++i)
       {
          hid_close(handles[i]);
       }
+      free(handles);
+      for(int i = 0; i < total_devices; ++i)
+      {
+         free(devices_found[i]);
+      }
+      free(devices_found);
+
       hid_exit();
       printf("hph-ft260 exited\n");
    }
@@ -169,15 +199,40 @@ namespace hph
       }
    }
 
-   void ft260_interface::open_device(uint8_t device_handle, uint8_t device_index)
+   void ft260_interface::initialize_gpio(uint8_t device_count)
    {
+      numbered_gpio_active = (bool**) calloc(device_count, sizeof(bool*));
+      lettered_gpio_active = (bool**) calloc(device_count, sizeof(bool*));
+
+      for(uint8_t device_number = 0; device_number < device_count; ++device_number)
+      {
+         numbered_gpio_active[device_number] = (bool*) calloc(ft260_gpio_max, sizeof(bool));
+         lettered_gpio_active[device_number] = (bool*) calloc(ft260_gpio_extra_max, sizeof(bool));
+
+         for(uint8_t index = 0; index < ft260_gpio_max; ++index)
+         {
+            numbered_gpio_active[device_number][index] = false;
+         }
+
+         for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
+         {
+            lettered_gpio_active[device_number][index] = false;
+         }
+      }
+
+      is_blocking = (bool*) calloc(device_count, sizeof(bool));
+   }
+
+   int ft260_interface::open_device(uint8_t device_handle, uint8_t device_index)
+   {
+      int local_error_code = -1;
       handles[device_handle] = hid_open_path(devices_found[device_index]);
 
       if (!handles[device_handle])
       {
          printf("Unable to open device\n");
          hid_exit();
-         (*error_code)[device_handle] = 2; // hid_device open failure error
+         local_error_code = 2; // hid_device open failure error
       }
       else
       {
@@ -239,22 +294,24 @@ namespace hph
          //clear the device buffers
          if(set_as_non_blocking(device_handle) < 0)
          {
-            (*error_code)[device_handle] = 3; // hid_device unable to change blocking state error
+            local_error_code = 3; // hid_device unable to change blocking state error
          }
 
          add_to_buffer(chip_version);
          if(read_data(device_handle) < 0)
          {
-            (*error_code)[device_handle] = 4; // hid_device unable to read data error
+            local_error_code = 4; // hid_device unable to read data error
          }
          reset_active_buffer();
 
 
          if(set_as_blocking(device_handle) < 0)
          {
-            (*error_code)[device_handle] = 3; // hid_device unable to change blocking state error
+            local_error_code = 3; // hid_device unable to change blocking state error
          }
       }
+
+      return local_error_code;
    }
 
    bool ft260_interface::find_device(uint8_t device_handle)
@@ -278,7 +335,9 @@ namespace hph
                //handle to associate said error with so just print the
                //issue
                printf("\n");
-               printf("ft260 device %d at path %s is not in list of devices to open\n", device_handle, devices_found[device_handle]);
+               printf("ft260 device %d at path %s is not in list of "
+                      "devices to opened, so although it is available "
+                      "it will not be opened\n", device_handle, devices_found[device_handle]);
                break;
             }
          }

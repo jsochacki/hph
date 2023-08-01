@@ -260,7 +260,8 @@ namespace hph
       private:
 
       void hid_api_check(void);
-      void open_device(uint8_t device_handle, uint8_t device_index);
+      void initialize_gpio(uint8_t device_count);
+      int open_device(uint8_t device_handle, uint8_t device_index);
       bool find_device(uint8_t device_handle);
 
       uint8_t i2c_data_report_id(uint8_t len);
