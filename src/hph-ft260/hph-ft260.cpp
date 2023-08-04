@@ -9,13 +9,11 @@ namespace hph
    ft260_interface::ft260_interface(const char *device_paths_in[], int **error_code_out)
       : device_paths(device_paths_in), error_code(error_code_out)
    {
-      devices = -1;
       int hid_devices = 0;
 
-      int *temporary_error_codes;
-      int temporary_error_code_counter = 0;
-
-      hid_device** temporary_handles;
+      int *temporary_error_code;
+      int *temporary_corresponding_interface_number;
+      int *temporary_devices_found;
 
       devices_to_be_opened = 0;
       devices_to_be_opened_found = 0;
@@ -69,7 +67,7 @@ namespace hph
 
          printf("ft260 hid devices found is %d\n", hid_devices);
 
-         temporary_error_codes = (int *) calloc(hid_devices, sizeof(int));
+         temporary_error_code = (int *) calloc(hid_devices, sizeof(int));
          handles = (hid_device**) calloc(hid_devices, sizeof(hid_device*));
 
          if(strcmp(device_paths[0],"all") != 0)
@@ -81,6 +79,7 @@ namespace hph
 
             if(devices_to_be_opened != 0)
             {
+               initialize_gpio(hid_devices);
                int handle_number = 0;
                for(int i = 0; i < hid_devices; ++i)
                {
@@ -90,12 +89,12 @@ namespace hph
                   {
                      printf("\n");
                      printf("ft260 device %d is handle %d and path is %s\n", i, handle_number, devices_found[i]);
-                     temporary_error_codes[i] = open_device(handle_number++, i);
+                     temporary_error_code[i] = open_device(handle_number++, i);
                   }
                   else
                   {
                      //signify that this device is not used
-                     temporary_error_codes[i] = -1;
+                     temporary_error_code[i] = -1;
                   }
                }
             }
@@ -107,7 +106,7 @@ namespace hph
             {
                printf("\n");
                printf("ft260 device %d path is %s\n", i, devices_found[i]);
-               temporary_error_codes[i] = open_device(i, i);
+               temporary_error_code[i] = open_device(i, i);
             }
          }
 
@@ -115,63 +114,34 @@ namespace hph
          hid_free_enumeration(devs);
       }
 
-      if(devices_to_be_opened_found != devices_to_be_opened)
+      if(devices_to_be_opened != devices_to_be_opened_found)
       {
-         int devices_to_be_opened_found_check = 0;
-
-         for(int i = 0; i < hid_devices; ++i)
-         {
-            devices_to_be_opened_found_check += ((temporary_error_codes[i] != -1) ? 1 : 0);
-         }
-
-         if(devices_to_be_opened_found_check != devices_to_be_opened_found)
-         {
-            printf("UNEXPECTED ERROR, EXITING\n");
-            exit(0);
-         }
-
-         initialize_gpio(devices_to_be_opened_found_check);
-
-         //need loop to initialize from temp values
-         //*error_code = (int*) calloc(devices_to_be_opened_found_check, sizeof(int));
-         //handles = (hid_device**) calloc(hid_devices, sizeof(hid_device*));
-
-
-         for(int i = 0; i < hid_devices; ++i)
-         {
-            (*error_code)[i] = 5; // hid_device to be opened not found
-         }
          printf("DEVICES THAT WERE INTENDED TO BE OPENED WERE NOT FOUND!!!\n");
          printf("WE WILL NOT ABORT BUT INTENDED EFFECT IS HIGHLY LIKELY NOT TO BE ACCOMPLISHED.\n");
       }
-      else
-      {
-         //need loop to initialize from temp values
-         //*error_code = (int*) calloc(devices_to_be_opened_found_check, sizeof(int));
-         //handles = (hid_device**) calloc(hid_devices, sizeof(hid_device*));
-         initialize_gpio(hid_devices);
-      }
+
+      consolidate_used_memory(hid_devices, temporary_error_code);
 
       buffer_slots_used = 0;
-
-      free(temporary_error_codes);
-      free(temporary_handles);
    }
 
    ft260_interface::~ft260_interface(void)
    {
-      free(error_code);
+      free(*error_code);
 
       for(int i = 0; i < devices; ++i)
       {
          hid_close(handles[i]);
       }
       free(handles);
+
       for(int i = 0; i < total_devices; ++i)
       {
          free(devices_found[i]);
       }
       free(devices_found);
+
+      free_gpio(devices);
 
       hid_exit();
       printf("hph-ft260 exited\n");
@@ -221,6 +191,19 @@ namespace hph
       }
 
       is_blocking = (bool*) calloc(device_count, sizeof(bool));
+   }
+
+   void ft260_interface::free_gpio(uint8_t device_count)
+   {
+      for(uint8_t device_number = 0; device_number < device_count; ++device_number)
+      {
+         free(numbered_gpio_active[device_number]);
+         free(lettered_gpio_active[device_number]);
+      }
+      free(numbered_gpio_active);
+      free(lettered_gpio_active);
+
+      free(is_blocking);
    }
 
    int ft260_interface::open_device(uint8_t device_handle, uint8_t device_index)
@@ -344,6 +327,57 @@ namespace hph
       }
 
       return device_found;
+   }
+
+   void ft260_interface::consolidate_used_memory(int hid_devices,
+                                                 int *temporary_error_code)
+   {
+      devices = 0;
+      for(int i = 0; i < hid_devices; ++i)
+      {
+         if(temporary_error_code[i] != -1)
+         {
+            ++devices;
+         }
+      }
+
+      if(devices != devices_to_be_opened_found)
+      {
+         printf("UNEXPECTED ERROR, EXITING\n");
+         exit(0);
+      }
+
+
+      free_gpio(hid_devices);
+      initialize_gpio(devices);
+
+
+      int temp_counter = 0;
+      hid_device** temporary_handles = (hid_device**) calloc(devices, sizeof(hid_device*));
+      *error_code = (int*) calloc(devices, sizeof(int));
+      temporary_devices_found = (char**) calloc(devices, sizeof(char*));
+      temporary_corresponding_interface_number = (int*) calloc(devices, sizeof(int));
+      for(int i = 0; i < hid_devices; ++i)
+      {
+         if(temporary_error_code[i] != -1)
+         {
+            temporary_handles[temp_counter] = handles[i];
+            (*error_code)[temp_counter++] = temporary_error_code[i];
+         }
+      }
+
+      free(handles);
+
+      handles = (hid_device**) calloc(devices, sizeof(hid_device*));
+      handles = temporary_handles;
+
+      free(temporary_handles);
+      free(temporary_error_code);
+   }
+
+   uint8_t ft260_interface::i2c_data_report_id(uint8_t len)
+   {
+      return (i2c_report_min + ((len)-1) / 4);
    }
 
    void ft260_interface::reset_active_buffer(void)
@@ -479,11 +513,6 @@ namespace hph
    int ft260_interface::is_device_blocking(uint8_t handle_index)
    {
       return is_blocking[handle_index];
-   }
-
-   uint8_t ft260_interface::i2c_data_report_id(uint8_t len)
-   {
-      return (i2c_report_min + ((len)-1) / 4);
    }
 
    uchar ft260_interface::get_numbered_gpio_bitmask(uint8_t handle_index)
