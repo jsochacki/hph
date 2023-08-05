@@ -3,6 +3,7 @@
 #include <stdio.h>   // printf
 #include <string.h>
 #include <wchar.h>   // wchar_t
+#include <climits>   //for INT_MIN etc...
 
 #include "hph-hidapi.hpp"
 
@@ -16,6 +17,13 @@ namespace hph
    const ushort hph_ft260_max_char_buf = 255;
    const ushort hph_ft260_vendor_id    = 0x0403;
    const ushort hph_ft260_product_id   = 0x6030;
+
+   const int device_not_used_error_code = -1;
+   const int no_error_error_code = 0;
+   const int hid_init_failure_error_code = 1;
+   const int hid_device_open_failure_error_code = 2;
+   const int hid_device_blocking_state_change_failure_error_code = 3;
+   const int hid_device_read_failure_error_code = 4;
 
    const uint16_t ft260_gpio_max = 6;
    const uint16_t ft260_gpio_extra_max = 8;
@@ -264,7 +272,7 @@ namespace hph
       void free_gpio(uint8_t device_count);
       int open_device(uint8_t device_handle, uint8_t device_index);
       bool find_device(uint8_t device_handle);
-      void consolidate_used_memory(int hid_devices, int *temporary_error_code);
+      void consolidate_used_memory(int hid_devices);
 
       uint8_t i2c_data_report_id(uint8_t len);
 

@@ -11,10 +11,6 @@ namespace hph
    {
       int hid_devices = 0;
 
-      int *temporary_error_code;
-      int *temporary_corresponding_interface_number;
-      int *temporary_devices_found;
-
       devices_to_be_opened = 0;
       devices_to_be_opened_found = 0;
 
@@ -42,7 +38,7 @@ namespace hph
       if(res)
       {
          *error_code = (int*) calloc(1, sizeof(int));
-         *error_code[0] = 1; // hid_init failure error
+         (*error_code)[0] = hid_init_failure_error_code; // hid_init failure error
       }
       else
       {
@@ -67,7 +63,7 @@ namespace hph
 
          printf("ft260 hid devices found is %d\n", hid_devices);
 
-         temporary_error_code = (int *) calloc(hid_devices, sizeof(int));
+         (*error_code) = (int *) calloc(hid_devices, sizeof(int));
          handles = (hid_device**) calloc(hid_devices, sizeof(hid_device*));
 
          if(strcmp(device_paths[0],"all") != 0)
@@ -89,12 +85,11 @@ namespace hph
                   {
                      printf("\n");
                      printf("ft260 device %d is handle %d and path is %s\n", i, handle_number, devices_found[i]);
-                     temporary_error_code[i] = open_device(handle_number++, i);
+                     (*error_code)[i] = open_device(handle_number++, i);
                   }
                   else
                   {
-                     //signify that this device is not used
-                     temporary_error_code[i] = -1;
+                     (*error_code)[i] = device_not_used_error_code;
                   }
                }
             }
@@ -106,7 +101,7 @@ namespace hph
             {
                printf("\n");
                printf("ft260 device %d path is %s\n", i, devices_found[i]);
-               temporary_error_code[i] = open_device(i, i);
+               (*error_code)[i] = open_device(i, i);
             }
          }
 
@@ -120,7 +115,7 @@ namespace hph
          printf("WE WILL NOT ABORT BUT INTENDED EFFECT IS HIGHLY LIKELY NOT TO BE ACCOMPLISHED.\n");
       }
 
-      consolidate_used_memory(hid_devices, temporary_error_code);
+      consolidate_used_memory(hid_devices);
 
       buffer_slots_used = 0;
    }
@@ -129,18 +124,22 @@ namespace hph
    {
       free(*error_code);
 
+      printf("devices is %d\n", devices);
       for(int i = 0; i < devices; ++i)
       {
+         printf("GOT HERE\n");
+         printf("handles[%d] = %d\n", i, handles[i]);
          hid_close(handles[i]);
-      }
-      free(handles);
-
-      for(int i = 0; i < total_devices; ++i)
-      {
+         printf("GOT HERE\n");
          free(devices_found[i]);
       }
+
+      printf("GOT HERE\n");
+      free(handles);
+      printf("GOT HERE\n");
       free(devices_found);
 
+      printf("GOT HERE\n");
       free_gpio(devices);
 
       hid_exit();
@@ -208,14 +207,14 @@ namespace hph
 
    int ft260_interface::open_device(uint8_t device_handle, uint8_t device_index)
    {
-      int local_error_code = -1;
+      int local_error_code = no_error_error_code;
       handles[device_handle] = hid_open_path(devices_found[device_index]);
 
       if (!handles[device_handle])
       {
          printf("Unable to open device\n");
          hid_exit();
-         local_error_code = 2; // hid_device open failure error
+         local_error_code = hid_device_open_failure_error_code;
       }
       else
       {
@@ -277,20 +276,20 @@ namespace hph
          //clear the device buffers
          if(set_as_non_blocking(device_handle) < 0)
          {
-            local_error_code = 3; // hid_device unable to change blocking state error
+            local_error_code = hid_device_blocking_state_change_failure_error_code;
          }
 
          add_to_buffer(chip_version);
          if(read_data(device_handle) < 0)
          {
-            local_error_code = 4; // hid_device unable to read data error
+            local_error_code = hid_device_read_failure_error_code;
          }
          reset_active_buffer();
 
 
          if(set_as_blocking(device_handle) < 0)
          {
-            local_error_code = 3; // hid_device unable to change blocking state error
+            local_error_code = hid_device_blocking_state_change_failure_error_code;
          }
       }
 
@@ -329,13 +328,12 @@ namespace hph
       return device_found;
    }
 
-   void ft260_interface::consolidate_used_memory(int hid_devices,
-                                                 int *temporary_error_code)
+   void ft260_interface::consolidate_used_memory(int hid_devices)
    {
       devices = 0;
       for(int i = 0; i < hid_devices; ++i)
       {
-         if(temporary_error_code[i] != -1)
+         if((*error_code)[i] != device_not_used_error_code)
          {
             ++devices;
          }
@@ -354,25 +352,51 @@ namespace hph
 
       int temp_counter = 0;
       hid_device** temporary_handles = (hid_device**) calloc(devices, sizeof(hid_device*));
-      *error_code = (int*) calloc(devices, sizeof(int));
-      temporary_devices_found = (char**) calloc(devices, sizeof(char*));
-      temporary_corresponding_interface_number = (int*) calloc(devices, sizeof(int));
+      int *temporary_error_code = (int*) calloc(devices, sizeof(int));
+      char **temporary_devices_found = (char**) calloc(devices, sizeof(char*));
+      int *temporary_corresponding_interface_number = (int*) calloc(devices, sizeof(int));
       for(int i = 0; i < hid_devices; ++i)
       {
-         if(temporary_error_code[i] != -1)
+         printf("handles[%d] = %d\n", i, handles[i]);
+         if((*error_code)[i] != device_not_used_error_code)
          {
             temporary_handles[temp_counter] = handles[i];
-            (*error_code)[temp_counter++] = temporary_error_code[i];
+            printf("handles[%d] = %d\n", i, handles[i]);
+            printf("temporary_handles[%d] = %d\n", temp_counter, temporary_handles[temp_counter]);
+            temporary_error_code[temp_counter] = (*error_code)[i];
+            temporary_devices_found[temp_counter] = (char*) calloc(strlen(devices_found[i]), sizeof(char));
+            temporary_devices_found[temp_counter] = devices_found[i];
+            temporary_corresponding_interface_number[temp_counter++] = corresponding_interface_number[i];
          }
       }
 
       free(handles);
+      free(devices_found);
+      free(corresponding_interface_number);
 
       handles = (hid_device**) calloc(devices, sizeof(hid_device*));
+      devices_found = (char**) calloc(devices, sizeof(char*));
+      corresponding_interface_number = (int*) calloc(devices, sizeof(int));
+
       handles = temporary_handles;
+      for(int i = 0; i < devices; ++i)
+      {
+         printf("handles[%d] = %d\n", i, handles[i]);
+         printf("temporary_handles[%d] = %d\n", i, temporary_handles[i]);
+      }
+      devices_found = temporary_devices_found;
+      corresponding_interface_number = temporary_corresponding_interface_number;
 
       free(temporary_handles);
       free(temporary_error_code);
+      free(temporary_devices_found);
+      free(temporary_corresponding_interface_number);
+      for(int i = 0; i < devices; ++i)
+      {
+         printf("handles[%d] = %d\n", i, handles[i]);
+         printf("temporary_handles[%d] = %d\n", i, temporary_handles[i]);
+      }
+
    }
 
    uint8_t ft260_interface::i2c_data_report_id(uint8_t len)
