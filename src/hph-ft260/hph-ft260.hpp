@@ -1,9 +1,11 @@
 #include <cstdint>   // uint8_t
 
 #include <stdio.h>   // printf
-#include <string.h>
 #include <wchar.h>   // wchar_t
 #include <climits>   //for INT_MIN etc...
+
+#include <cstring>
+#include <vector>
 
 #include "hph-hidapi.hpp"
 
@@ -56,7 +58,7 @@ namespace hph
       public:
 
       ft260_interface();
-      ft260_interface(const char *device_paths_in[], int **error_code_out);
+      ft260_interface(std::vector<std::string> device_paths_in);
       ~ft260_interface();
 
       //int initialize_as_gpio(uint8_t handle_index);
@@ -282,7 +284,7 @@ namespace hph
       int res;
       int total_devices;
       int devices;
-      int *corresponding_interface_number;
+      std::vector<int> corresponding_interface_numbers;
 
       unsigned char active_buffer[hph_ft260_max_char_buf];
       uint8_t buffer_slots_used;
@@ -291,16 +293,16 @@ namespace hph
 
       struct hid_device_info* devs;
 
-      hid_device** handles;
+      std::vector<hid_device*> handles;
 
 
       hid_device_search_parameters device_parameters;
 
       bool *is_blocking;
 
-      char **devices_found;
-      const char **device_paths;
-      int **error_code;
+      std::vector<std::string> devices_found;
+      std::vector<std::string> device_paths;
+      std::vector<int> error_codes;
 
       bool **numbered_gpio_active;
       bool **lettered_gpio_active;

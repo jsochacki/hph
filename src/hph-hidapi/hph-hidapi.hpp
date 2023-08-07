@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <string> // for wstring
 
+#include <cstring>
+#include <vector>
+
 #include <hidapi/hidapi.h>
 
 // Headers needed for sleeping.
@@ -76,7 +79,7 @@ namespace hph
    int count_devices(struct hid_device_info *cur_dev);
    int get_devices(struct hid_device_info *cur_dev,
                     hid_device_search_parameters dev_to_find,
-                    char ** devices_found,
-                    int **corresponding_interface_number);
+                    std::vector<std::string> &devices_found,
+                    std::vector<int> &corresponding_interface_numbers);
    wchar_t *utf8_to_wchar_t(const char *utf8);
 }

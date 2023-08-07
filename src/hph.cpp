@@ -4,14 +4,15 @@
 int main(int argc, char* argv[])
 {
    int result_size;
-   int *ft260s_error_codes;
 
    int device_count;
-   const char *device_paths_to_open[] = {"2-2.3:1.0", "2-2.2:1.1", ""};
-   //const char *device_paths_to_open[] = {""};
-   //const char *device_paths_to_open[] = {"all"};
+   std::vector<std::string> device_paths_to_open;
 
-   hph::ft260_interface ft260s(device_paths_to_open, &ft260s_error_codes);
+   device_paths_to_open.emplace_back("2-2.3:1.0");
+   device_paths_to_open.emplace_back("2-2.2:1.1");
+   //device_paths_to_open.emplace_back("all");
+
+   hph::ft260_interface ft260s(device_paths_to_open);
 
    device_count = ft260s.get_device_count();
    printf("device count is %d\n", device_count);
@@ -21,10 +22,13 @@ int main(int argc, char* argv[])
    }
    else
    {
+      // replace with new error code getter
+      /*
       for(int i = 0; i < device_count; ++i)
       {
          printf("error code %d is %d\n", i, ft260s_error_codes[i]);
       }
+      */
    }
 
    /*
