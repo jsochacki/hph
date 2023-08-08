@@ -1,3 +1,6 @@
+#ifndef HPH_FT260_H_
+#define HPH_FT260_H_
+
 #include <cstdint>   // uint8_t
 
 #include <stdio.h>   // printf
@@ -8,51 +11,12 @@
 #include <vector>
 
 #include "hph-hidapi.hpp"
+#include "hph-ft260-types.hpp"
 
 //#define HPH_FT260_INTERFACE_DEBUG
 
 namespace hph
 {
-   typedef unsigned char uchar;
-
-   const ushort hph_ft260_max_str_len  = 255;
-   const ushort hph_ft260_max_char_buf = 255;
-   const ushort hph_ft260_vendor_id    = 0x0403;
-   const ushort hph_ft260_product_id   = 0x6030;
-
-   const int device_not_used_error_code = -1;
-   const int no_error_error_code = 0;
-   const int hid_init_failure_error_code = 1;
-   const int hid_device_open_failure_error_code = 2;
-   const int hid_device_blocking_state_change_failure_error_code = 3;
-   const int hid_device_read_failure_error_code = 4;
-
-   const uint16_t ft260_gpio_max = 6;
-   const uint16_t ft260_gpio_extra_max = 8;
-
-   const uint16_t ft260_max_report_length = 64;
-
-   /*
-    * The ft260 input report format defines 62 bytes for the data payload,
-    * but when requested 62 bytes, the controller returns 60 and 2 in
-    * separate input reports. To achieve better performance with the
-    * multi-report read data transfers, we set the maximum read payload
-    * length to a multiple of 60. With a 100 kHz I2C clock, one 240 bytes
-    * read takes about 1/27 second, which is excessive; On the other hand,
-    * some higher layer drivers like at24 or optoe limit the i2c reads to
-    * 128 bytes. To not block other drivers out of I2C for potentially
-    * troublesome amounts of time, we select the maximum read payload length
-    * to be 180 bytes.
-    */
-
-   const ushort ft260_read_data_max = 180;
-   const ushort ft260_write_data_max = 60;
-
-   constexpr uint16_t ft260_gpio_total = (ft260_gpio_max + ft260_gpio_extra_max);
-   constexpr uint16_t ft260_gpio_mask = (static_cast<uint16_t>(~(static_cast<uint16_t>(0xffff) << ft260_gpio_total)));
-
-
-
    class ft260_interface
    {
       public:
@@ -60,6 +24,7 @@ namespace hph
       ft260_interface();
       ft260_interface(std::vector<std::string> device_paths_in);
       ~ft260_interface();
+      bool ft260_interface_is_alive(void);
 
       //int initialize_as_gpio(uint8_t handle_index);
 
@@ -269,17 +234,20 @@ namespace hph
 
       private:
 
+      void deallocate_memory(void);
       void hid_api_check(void);
       void initialize_gpio(uint8_t device_count);
       void free_gpio(uint8_t device_count);
-      int open_device(uint8_t device_handle, uint8_t device_index);
-      bool find_device(uint8_t device_handle);
+      int open_device(uint8_t device_index);
+      bool find_device(uint8_t device_index);
       void consolidate_used_memory(int hid_devices);
 
       uint8_t i2c_data_report_id(uint8_t len);
 
       static uchar numbered_gpio_map[ft260_gpio_max];
       static uchar lettered_gpio_map[ft260_gpio_extra_max];
+
+      bool fatal_errors;
 
       int res;
       int total_devices;
@@ -312,3 +280,5 @@ namespace hph
    };
 
 }   // namespace hph
+
+#endif /* HPH_FT260_H_ */

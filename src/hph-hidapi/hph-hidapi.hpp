@@ -1,3 +1,6 @@
+#ifndef HPH_HIDAPI_H_
+#define HPH_HIDAPI_H_
+
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
@@ -83,3 +86,5 @@ namespace hph
                     std::vector<int> &corresponding_interface_numbers);
    wchar_t *utf8_to_wchar_t(const char *utf8);
 }
+
+#endif /* HPH_HIDAPI_H_ */
