@@ -24,7 +24,6 @@ namespace hph
       ft260_interface();
       ft260_interface(std::vector<std::string> device_paths_in);
       ~ft260_interface();
-      bool ft260_interface_is_alive(void);
 
       //int initialize_as_gpio(uint8_t handle_index);
 
@@ -43,7 +42,9 @@ namespace hph
       int set_as_non_blocking(uint8_t handle_index);
       int set_as_blocking(uint8_t handle_index);
 
+      bool ft260_interface_is_alive(void);
       int get_device_count(void);
+      std::vector<int> get_error_codes(void);
       int is_device_blocking(uint8_t handle_index);
 
       uchar get_numbered_gpio_bitmask(uint8_t handle_index);

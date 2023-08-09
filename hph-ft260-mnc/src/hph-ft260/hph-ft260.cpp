@@ -109,6 +109,7 @@ namespace hph
             }
          }
 
+         printf("\n");
          printf("devices to be opened = %d\n", devices_to_be_opened);
          printf("devices to be opened found = %d\n", devices_to_be_opened_found);
 
@@ -134,12 +135,13 @@ namespace hph
 
    void ft260_interface::deallocate_memory(void)
    {
-      printf("devices is %d\n", devices);
-      printf("GOT HERE\n");
       if(devices > 0)
       {
+         printf("\n");
+         printf("Deallocating memory and releasing the following devices\n");
          for(int i = 0; i < devices; ++i)
          {
+            printf("\n");
             struct hid_device_info* info = hid_get_device_info(handles[i]);
             if (info == NULL)
             {
@@ -149,25 +151,16 @@ namespace hph
             {
                print_devices(info);
             }
-            printf("GOT HERE\n");
          }
          for(int i = 0; i < devices; ++i)
          {
-            printf("GOT HERE\n");
-            printf("handles[%d] = %d\n", i, handles[i]);
             hid_close(handles[i]);
          }
 
-         printf("GOT HERE\n");
          free_gpio(devices);
       }
 
       hid_exit();
-   }
-
-   bool ft260_interface::ft260_interface_is_alive(void)
-   {
-      return (!fatal_errors);
    }
 
    /*
@@ -362,8 +355,6 @@ namespace hph
       {
          //Make sure to mark devices we wanted to open but failed to open or
          //perform properly
-         printf("handles[%d] is %d\n", i, handles[i]);
-         printf("error_codes[%d] is %d\n", i, error_codes[i]);
          if(error_codes[i] != no_error_error_code)
          {
             //device opened but is not working right so close it out first
@@ -412,13 +403,9 @@ namespace hph
       int check_index = 0;
       for(std::vector<hid_device*>::iterator it = handles.begin(); it != handles.end();)
       {
-         printf("error codes %d \n", error_codes[check_index]);
-         printf("check index %d \n", check_index);
-         printf("it %d is active\n", *it);
          if(error_codes[check_index] == device_not_used_error_code)
          {
             it = handles.erase(it);
-            printf("it %d is being removed\n", *it);
          }
          else
          {
@@ -454,6 +441,7 @@ namespace hph
          printf("\n");
          printf("ft260 device %d is handle %d and path is %s\n", i, i, devices_found[i].c_str());
       }
+      printf("\n");
    }
 
    uint8_t ft260_interface::i2c_data_report_id(uint8_t len)
@@ -586,9 +574,19 @@ namespace hph
       return res;
    }
 
+   bool ft260_interface::ft260_interface_is_alive(void)
+   {
+      return (!fatal_errors);
+   }
+
    int ft260_interface::get_device_count(void)
    {
       return devices;
+   }
+
+   std::vector<int> ft260_interface::get_error_codes(void)
+   {
+      return error_codes;
    }
 
    int ft260_interface::is_device_blocking(uint8_t handle_index)

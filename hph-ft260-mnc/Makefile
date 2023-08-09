@@ -1,4 +1,4 @@
-TARGET_EXEC ?= hph.out
+TARGET_EXEC ?= hph-ft260-mnc.exe
 
 BUILD_DIR ?= ./build
 SRC_DIRS ?= ./src
