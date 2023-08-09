@@ -17,6 +17,8 @@ namespace hph
    const ushort hph_ft260_vendor_id    = 0x0403;
    const ushort hph_ft260_product_id   = 0x6030;
 
+   const int device_not_found_index = -1;
+
    const int device_not_used_error_code = -1;
    const int no_error_error_code = 0;
    const int hid_init_failure_error_code = 1;

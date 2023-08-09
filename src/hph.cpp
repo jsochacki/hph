@@ -8,8 +8,9 @@ int main(int argc, char* argv[])
    int device_count;
    std::vector<std::string> device_paths_to_open;
 
+   //device_paths_to_open.emplace_back("errorslol");
    //device_paths_to_open.emplace_back("2-2.3:1.0");
-   device_paths_to_open.emplace_back("2-2.2:1.1");
+   //device_paths_to_open.emplace_back("2-2.2:1.1");
    //device_paths_to_open.emplace_back("all");
    //device_paths_to_open.emplace_back("");
 

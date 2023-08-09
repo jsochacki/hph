@@ -89,18 +89,16 @@ namespace hph
             else if(device_paths[0].compare("all") == 0)
             {
                devices_to_be_opened = ft260_devices;
-               devices_to_be_opened_found = ft260_devices;
-
-               initialize_gpio(ft260_devices);
-               for(int i = 0; i < ft260_devices; ++i)
-               {
-                  error_codes.emplace_back(open_device(i));
-               }
+               device_paths.clear();
+               device_paths = devices_found;
             }
             else
             {
                devices_to_be_opened = device_paths.size();
+            }
 
+            if(!fatal_errors)
+            {
                //need this prior to opening as you do blocking write read test as
                //part of opening
                initialize_gpio(ft260_devices);
@@ -113,13 +111,6 @@ namespace hph
 
          printf("devices to be opened = %d\n", devices_to_be_opened);
          printf("devices to be opened found = %d\n", devices_to_be_opened_found);
-         if(devices_to_be_opened != devices_to_be_opened_found)
-         {
-            printf("\n");
-            printf("Devices that were intended to be opened were not found.\n");
-            printf("We will not abort but intended effect is highly likely not to be accomplished.\n");
-            printf("\n");
-         }
 
          hid_free_enumeration(devs);
       }
@@ -238,9 +229,16 @@ namespace hph
       free(is_blocking);
    }
 
-   int ft260_interface::open_device(uint8_t device_index)
+   int ft260_interface::open_device(int device_index)
    {
       int local_error_code = no_error_error_code;
+
+      if(device_index == device_not_found_index)
+      {
+         handles.emplace_back(const_cast<hid_device*>(hid_open_path_failure_return_code));
+         local_error_code = device_not_used_error_code;
+         return local_error_code;
+      }
       // Failure returns NULL
       handles.emplace_back(hid_open_path(devices_found[device_index].c_str()));
       uint8_t device_handle = handles.size() - 1;
@@ -331,7 +329,7 @@ namespace hph
       return local_error_code;
    }
 
-   void ft260_interface::find_and_open_device(uint8_t device_index)
+   void ft260_interface::find_and_open_device(int device_index)
    {
       std::string device_to_find = devices_found[device_index];
       bool device_found = false;
@@ -341,47 +339,64 @@ namespace hph
          {
             device_found = true;
             ++devices_to_be_opened_found;
-            error_codes.emplace_back(open_device(device_index));
             break;
          }
       }
 
       if(!device_found)
       {
-         error_codes.emplace_back(device_not_used_error_code);
+         device_index = device_not_found_index;
          printf("\n");
          printf("ft260 device %d at path %s is not in list of "
                 "devices to opened, so although it is available "
                 "it will not be opened\n", device_index, device_to_find.c_str());
       }
+
+      error_codes.emplace_back(open_device(device_index));
    }
 
    void ft260_interface::consolidate_used_memory(int ft260_devices)
    {
-      //Make sure to mark devices we wanted to open but failed to open
+      //Tally up devices used
       for(int i = 0; i < ft260_devices; ++i)
       {
-         if(handles[i] == hid_open_path_failure_return_code)
+         //Make sure to mark devices we wanted to open but failed to open or
+         //perform properly
+         printf("handles[%d] is %d\n", i, handles[i]);
+         printf("error_codes[%d] is %d\n", i, error_codes[i]);
+         if(error_codes[i] != no_error_error_code)
          {
+            //device opened but is not working right so close it out first
+            if((error_codes[i] == hid_device_blocking_state_change_failure_error_code)
+               || (error_codes[i] == hid_device_read_failure_error_code))
+            {
+               hid_close(handles[i]);
+            }
             error_codes[i] = device_not_used_error_code;
          }
-      }
-
-      //Tally up devices not used
-      for(int i = 0; i < ft260_devices; ++i)
-      {
-         if(error_codes[i] != device_not_used_error_code)
+         else
          {
             ++devices;
          }
       }
 
-      if(devices != devices_to_be_opened_found)
+      //number of devices successfully opened, number actually found
+      if(devices != devices_to_be_opened)
       {
-         if(devices_to_be_opened != devices_to_be_opened_found)
+         //number of devices successfully opened, number actually found
+         if(devices != devices_to_be_opened_found)
          {
             printf("\n");
             printf("Devices that were intended to be opened were unable to be opened.\n");
+            printf("We will not abort but intended effect is highly likely not to be accomplished.\n");
+            printf("\n");
+
+         }
+         //number list to be opened, number actually found
+         if(devices_to_be_opened != devices_to_be_opened_found)
+         {
+            printf("\n");
+            printf("Devices that were intended to be opened were unable to be found.\n");
             printf("We will not abort but intended effect is highly likely not to be accomplished.\n");
             printf("\n");
          }
@@ -395,13 +410,19 @@ namespace hph
       //Have to baby handles and cant treat like rest as we cant risk erasing
       //actual data structures we can only properly create when opening the devices
       int check_index = 0;
-      for(std::vector<hid_device*>::iterator it = handles.begin(); it != handles.end(); ++it)
+      for(std::vector<hid_device*>::iterator it = handles.begin(); it != handles.end();)
       {
+         printf("error codes %d \n", error_codes[check_index]);
+         printf("check index %d \n", check_index);
          printf("it %d is active\n", *it);
          if(error_codes[check_index] == device_not_used_error_code)
          {
-            handles.erase(it);
+            it = handles.erase(it);
             printf("it %d is being removed\n", *it);
+         }
+         else
+         {
+            ++it;
          }
          ++check_index;
       }
