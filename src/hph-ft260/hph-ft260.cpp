@@ -13,7 +13,7 @@ namespace hph
    {
       fatal_errors = false;
       devices = 0;
-      int hid_devices = 0;
+      int ft260_devices = 0;
 
       devices_to_be_opened = 0;
       devices_to_be_opened_found = 0;
@@ -61,56 +61,67 @@ namespace hph
 
          printf("number of all hid devices found is %d\n", total_devices);
 
-         hid_devices = get_devices(devs, device_parameters, devices_found, corresponding_interface_numbers);
+         ft260_devices = get_devices(devs, device_parameters, devices_found, corresponding_interface_numbers);
 
-         printf("number of ft260 hid devices found is %d\n", hid_devices);
+         printf("number of ft260 hid devices found is %d\n", ft260_devices);
+         printf("\n");
 
-         if((device_paths.empty())
-            || (device_paths[0].compare("") == 0))
+
+         if(ft260_devices == 0)
          {
-            printf("No devices to be opened were specified\n");
+            printf("No ft260 devices were found\n");
             printf("Exiting Now\n");
             fatal_errors = true;
          }
-         else if(device_paths[0].compare("all") == 0)
-         {
-            initialize_gpio(hid_devices);
-            for(int i = 0; i < hid_devices; ++i)
-            {
-               error_codes.emplace_back(open_device(i));
-            }
-         }
          else
          {
-            devices_to_be_opened = device_paths.size();
-
-            if(devices_to_be_opened != 0)
+            //CANNOT change order of statements below, moving device_paths.empty()
+            //check to anywhere but first check produces wrong results since you
+            //have to check 0th index entry for other test cases and if it is empty
+            //there is none
+            if((device_paths.empty())
+               || (device_paths[0].compare("") == 0))
             {
-               initialize_gpio(hid_devices);
-               for(int i = 0; i < hid_devices; ++i)
-               {
-                  bool device_found = find_device(i);
+               printf("No devices to be opened were specified\n");
+               printf("Exiting Now\n");
+               fatal_errors = true;
+            }
+            else if(device_paths[0].compare("all") == 0)
+            {
+               devices_to_be_opened = ft260_devices;
+               devices_to_be_opened_found = ft260_devices;
 
-                  if(device_found)
-                  {
-                     error_codes.emplace_back(open_device(i));
-                  }
-                  else
-                  {
-                     error_codes.emplace_back(device_not_used_error_code);
-                  }
+               initialize_gpio(ft260_devices);
+               for(int i = 0; i < ft260_devices; ++i)
+               {
+                  error_codes.emplace_back(open_device(i));
+               }
+            }
+            else
+            {
+               devices_to_be_opened = device_paths.size();
+
+               //need this prior to opening as you do blocking write read test as
+               //part of opening
+               initialize_gpio(ft260_devices);
+               for(int i = 0; i < ft260_devices; ++i)
+               {
+                  find_and_open_device(i);
                }
             }
          }
 
-         printf("\n");
-         hid_free_enumeration(devs);
-      }
+         printf("devices to be opened = %d\n", devices_to_be_opened);
+         printf("devices to be opened found = %d\n", devices_to_be_opened_found);
+         if(devices_to_be_opened != devices_to_be_opened_found)
+         {
+            printf("\n");
+            printf("Devices that were intended to be opened were not found.\n");
+            printf("We will not abort but intended effect is highly likely not to be accomplished.\n");
+            printf("\n");
+         }
 
-      if(devices_to_be_opened != devices_to_be_opened_found)
-      {
-         printf("DEVICES THAT WERE INTENDED TO BE OPENED WERE NOT FOUND!!!\n");
-         printf("WE WILL NOT ABORT BUT INTENDED EFFECT IS HIGHLY LIKELY NOT TO BE ACCOMPLISHED.\n");
+         hid_free_enumeration(devs);
       }
 
       if(fatal_errors)
@@ -120,7 +131,7 @@ namespace hph
       else
       {
          reset_active_buffer();
-         consolidate_used_memory(hid_devices);
+         consolidate_used_memory(ft260_devices);
       }
    }
 
@@ -236,11 +247,12 @@ namespace hph
 
       if (handles[device_handle] == hid_open_path_failure_return_code)
       {
-         printf("Unable to open device\n");
+         printf("Unable to open device %s\n", devices_found[device_index].c_str());
          local_error_code = hid_device_open_failure_error_code;
       }
       else
       {
+         printf("\n");
          printf("interface number %d\n", corresponding_interface_numbers[device_index]);
 
          wstr[0] = 0x0000;
@@ -319,7 +331,7 @@ namespace hph
       return local_error_code;
    }
 
-   bool ft260_interface::find_device(uint8_t device_index)
+   void ft260_interface::find_and_open_device(uint8_t device_index)
    {
       std::string device_to_find = devices_found[device_index];
       bool device_found = false;
@@ -329,27 +341,34 @@ namespace hph
          {
             device_found = true;
             ++devices_to_be_opened_found;
+            error_codes.emplace_back(open_device(device_index));
             break;
          }
       }
 
       if(!device_found)
       {
-         //registering an error code makes no sense as there is no
-         //handle to associate said error with so just print the
-         //issue
+         error_codes.emplace_back(device_not_used_error_code);
          printf("\n");
          printf("ft260 device %d at path %s is not in list of "
                 "devices to opened, so although it is available "
                 "it will not be opened\n", device_index, device_to_find.c_str());
       }
-
-      return device_found;
    }
 
-   void ft260_interface::consolidate_used_memory(int hid_devices)
+   void ft260_interface::consolidate_used_memory(int ft260_devices)
    {
-      for(int i = 0; i < hid_devices; ++i)
+      //Make sure to mark devices we wanted to open but failed to open
+      for(int i = 0; i < ft260_devices; ++i)
+      {
+         if(handles[i] == hid_open_path_failure_return_code)
+         {
+            error_codes[i] = device_not_used_error_code;
+         }
+      }
+
+      //Tally up devices not used
+      for(int i = 0; i < ft260_devices; ++i)
       {
          if(error_codes[i] != device_not_used_error_code)
          {
@@ -359,70 +378,60 @@ namespace hph
 
       if(devices != devices_to_be_opened_found)
       {
-         printf("UNEXPECTED ERROR, EXITING\n");
-         fatal_errors = true;
+         if(devices_to_be_opened != devices_to_be_opened_found)
+         {
+            printf("\n");
+            printf("Devices that were intended to be opened were unable to be opened.\n");
+            printf("We will not abort but intended effect is highly likely not to be accomplished.\n");
+            printf("\n");
+         }
       }
 
 
-      if(!fatal_errors)
+      free_gpio(ft260_devices);
+      initialize_gpio(devices);
+
+
+      //Have to baby handles and cant treat like rest as we cant risk erasing
+      //actual data structures we can only properly create when opening the devices
+      int check_index = 0;
+      for(std::vector<hid_device*>::iterator it = handles.begin(); it != handles.end(); ++it)
       {
-         free_gpio(hid_devices);
-         initialize_gpio(devices);
-
-
-         int temp_counter = 0;
-         //std::vector<hid_device*> temporary_handles;
-         std::vector<int> temporary_error_codes;
-         std::vector<std::string> temporary_devices_found;
-         std::vector<int> temporary_corresponding_interface_numbers;
-         for(int i = 0; i < hid_devices; ++i)
+         printf("it %d is active\n", *it);
+         if(error_codes[check_index] == device_not_used_error_code)
          {
-            printf("handles[%d] = %d\n", i, handles[i]);
-            if(error_codes[i] != device_not_used_error_code)
-            {
-               //temporary_handles.push_back(handles[i]);
-               printf("handles[%d] = %d\n", i, handles[i]);
-               //printf("temporary_handles[%d] = %d\n", temp_counter, temporary_handles[temp_counter]);
-               temporary_error_codes.push_back(error_codes[i]);
-               temporary_devices_found.push_back(devices_found[i]);
-               temporary_corresponding_interface_numbers.push_back(corresponding_interface_numbers[i]);
-               ++temp_counter;
-            }
+            handles.erase(it);
+            printf("it %d is being removed\n", *it);
          }
+         ++check_index;
+      }
 
-         int check_index = 0;
-         for(std::vector<hid_device*>::iterator it = handles.begin(); it != handles.end(); ++it)
+      //Take care of the rest
+      std::vector<int> temporary_error_codes;
+      std::vector<std::string> temporary_devices_found;
+      std::vector<int> temporary_corresponding_interface_numbers;
+      for(int i = 0; i < ft260_devices; ++i)
+      {
+         if(error_codes[i] != device_not_used_error_code)
          {
-            printf("it %d is active\n", *it);
-            if(error_codes[check_index] == device_not_used_error_code)
-            {
-               handles.erase(it);
-               printf("it %d is being removed\n", *it);
-            }
-            ++check_index;
+            temporary_error_codes.push_back(error_codes[i]);
+            temporary_devices_found.push_back(devices_found[i]);
+            temporary_corresponding_interface_numbers.push_back(corresponding_interface_numbers[i]);
          }
+      }
 
-         //handles.clear();
-         error_codes.clear();
-         devices_found.clear();
-         corresponding_interface_numbers.clear();
+      error_codes.clear();
+      devices_found.clear();
+      corresponding_interface_numbers.clear();
 
-         //handles = temporary_handles;
-         error_codes = temporary_error_codes;
-         devices_found = temporary_devices_found;
-         corresponding_interface_numbers = temporary_corresponding_interface_numbers;
+      error_codes = temporary_error_codes;
+      devices_found = temporary_devices_found;
+      corresponding_interface_numbers = temporary_corresponding_interface_numbers;
 
-         for(int i = 0; i < devices; ++i)
-         {
-            printf("\n");
-            printf("ft260 device %d is handle %d and path is %s\n", i, i, devices_found[i].c_str());
-         }
-
-         for(int i = 0; i < devices; ++i)
-         {
-            printf("handles[%d] = %d\n", i, handles[i]);
-            //printf("temporary_handles[%d] = %d\n", i, temporary_handles[i]);
-         }
+      for(int i = 0; i < devices; ++i)
+      {
+         printf("\n");
+         printf("ft260 device %d is handle %d and path is %s\n", i, i, devices_found[i].c_str());
       }
    }
 

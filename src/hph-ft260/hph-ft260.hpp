@@ -239,8 +239,8 @@ namespace hph
       void initialize_gpio(uint8_t device_count);
       void free_gpio(uint8_t device_count);
       int open_device(uint8_t device_index);
-      bool find_device(uint8_t device_index);
-      void consolidate_used_memory(int hid_devices);
+      void find_and_open_device(uint8_t device_index);
+      void consolidate_used_memory(int ft260_devices);
 
       uint8_t i2c_data_report_id(uint8_t len);
 
