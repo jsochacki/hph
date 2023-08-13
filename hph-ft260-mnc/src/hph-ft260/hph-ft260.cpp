@@ -189,20 +189,26 @@ namespace hph
    {
       numbered_gpio_active = (bool**) calloc(device_count, sizeof(bool*));
       lettered_gpio_active = (bool**) calloc(device_count, sizeof(bool*));
+      numbered_gpio_write_notread = (bool**) calloc(device_count, sizeof(bool*));
+      lettered_gpio_write_notread = (bool**) calloc(device_count, sizeof(bool*));
 
       for(uint8_t device_number = 0; device_number < device_count; ++device_number)
       {
          numbered_gpio_active[device_number] = (bool*) calloc(ft260_gpio_max, sizeof(bool));
          lettered_gpio_active[device_number] = (bool*) calloc(ft260_gpio_extra_max, sizeof(bool));
+         numbered_gpio_write_notread[device_number] = (bool*) calloc(ft260_gpio_max, sizeof(bool));
+         lettered_gpio_write_notread[device_number] = (bool*) calloc(ft260_gpio_extra_max, sizeof(bool));
 
          for(uint8_t index = 0; index < ft260_gpio_max; ++index)
          {
             numbered_gpio_active[device_number][index] = false;
+            numbered_gpio_write_notread[device_number][index] = false;
          }
 
          for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
          {
             lettered_gpio_active[device_number][index] = false;
+            lettered_gpio_write_notread[device_number][index] = false;
          }
       }
 
@@ -215,9 +221,13 @@ namespace hph
       {
          free(numbered_gpio_active[device_number]);
          free(lettered_gpio_active[device_number]);
+         free(numbered_gpio_write_notread[device_number]);
+         free(lettered_gpio_write_notread[device_number]);
       }
       free(numbered_gpio_active);
       free(lettered_gpio_active);
+      free(numbered_gpio_write_notread);
+      free(lettered_gpio_write_notread);
 
       free(is_blocking);
    }
@@ -594,7 +604,7 @@ namespace hph
       return is_blocking[handle_index];
    }
 
-   uchar ft260_interface::get_numbered_gpio_bitmask(uint8_t handle_index)
+   uchar ft260_interface::get_numbered_gpio_active_bitmask(uint8_t handle_index)
    {
       uchar bitmask = 0x00;
 
@@ -609,13 +619,43 @@ namespace hph
       return bitmask;
    }
 
-   uchar ft260_interface::get_lettered_gpio_bitmask(uint8_t handle_index)
+   uchar ft260_interface::get_lettered_gpio_active_bitmask(uint8_t handle_index)
    {
       uchar bitmask = 0x00;
 
       for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
       {
          if(lettered_gpio_active[handle_index][index])
+         {
+            bitmask |= lettered_gpio_map[index];
+         }
+      }
+
+      return bitmask;
+   }
+
+   uchar ft260_interface::get_numbered_gpio_write_notread_bitmask(uint8_t handle_index)
+   {
+      uchar bitmask = 0x00;
+
+      for(uint8_t index = 0; index < ft260_gpio_max; ++index)
+      {
+         if(numbered_gpio_write_notread[handle_index][index])
+         {
+            bitmask |= numbered_gpio_map[index];
+         }
+      }
+
+      return bitmask;
+   }
+
+   uchar ft260_interface::get_lettered_gpio_write_notread_bitmask(uint8_t handle_index)
+   {
+      uchar bitmask = 0x00;
+
+      for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
+      {
+         if(lettered_gpio_write_notread[handle_index][index])
          {
             bitmask |= lettered_gpio_map[index];
          }
@@ -672,18 +712,98 @@ namespace hph
       }
    }
 
-   /*
-   void ft260_interface::read_numbered_gpio_select(uint8_t handle_index, uchar bitmask)
+   void ft260_interface::set_numbered_gpio_write_notread(uint8_t handle_index, uchar bitmask)
    {
       for(uint8_t index = 0; index < ft260_gpio_max; ++index)
       {
-         numbered_gpio_active[handle_index][index] = false;
+         numbered_gpio_write_notread[handle_index][index] = false;
          if((bitmask & (0x01 << index)) != 0)
          {
-            numbered_gpio_active[handle_index][index] = true;
+            numbered_gpio_write_notread[handle_index][index] = true;
          }
       }
    }
-   */
+
+   void ft260_interface::set_lettered_gpio_write_notread(uint8_t handle_index, uchar bitmask)
+   {
+      for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
+      {
+         lettered_gpio_write_notread[handle_index][index] = false;
+         if((bitmask & (0x01 << index)) != 0)
+         {
+            lettered_gpio_write_notread[handle_index][index] = true;
+         }
+      }
+   }
+
+   void ft260_interface::set_numbered_gpio_write_notread(uint8_t handle_index, bool gpio_set[ft260_gpio_max])
+   {
+      for(uint8_t index = 0; index < ft260_gpio_max; ++index)
+      {
+         numbered_gpio_write_notread[handle_index][index] = false;
+         if(gpio_set[index] == true)
+         {
+            numbered_gpio_write_notread[handle_index][index] = true;
+         }
+      }
+   }
+
+   void ft260_interface::set_lettered_gpio_write_notread(uint8_t handle_index, bool gpio_set[ft260_gpio_extra_max])
+   {
+      for(uint8_t index = 0; index < ft260_gpio_extra_max; ++index)
+      {
+         lettered_gpio_write_notread[handle_index][index] = false;
+         if(gpio_set[index] == true)
+         {
+            lettered_gpio_write_notread[handle_index][index] = true;
+         }
+      }
+   }
+
+   int ft260_interface::read_gpio(uint8_t handle_index)
+   {
+      this->reset_active_buffer();
+      this->add_to_buffer(this->gpio);
+      this->add_to_buffer(get_numbered_gpio_active_bitmask(this->numbered_gpio_active[handle_index]));
+      this->add_to_buffer(get_numbered_gpio_write_notread_bitmask(this->numbered_gpio_write_notread[handle_index]));
+      this->add_to_buffer(get_lettered_gpio_active_bitmask(this->lettered_gpio_active[handle_index]));
+      this->add_to_buffer(get_lettered_gpio_write_notread_bitmask(this->lettered_gpio_write_notread[handle_index]));
+      return (this->read_feature_report(handle_index));
+   }
+
+
+   int ft260_interface::write_gpio(uint8_t handle_index)
+   {
+      this->reset_active_buffer();
+      this->add_to_buffer(this->gpio);
+      this->add_to_buffer(get_numbered_gpio_active_bitmask(this->numbered_gpio_active[handle_index]));
+      this->add_to_buffer(get_numbered_gpio_write_notread_bitmask(this->numbered_gpio_write_notread[handle_index]));
+      this->add_to_buffer(get_lettered_gpio_active_bitmask(this->lettered_gpio_active[handle_index]));
+      this->add_to_buffer(get_lettered_gpio_write_notread_bitmask(this->lettered_gpio_write_notread[handle_index]));
+      return (this->write_feature_report(handle_index));
+   }
+
+
+   int ft260_interface::read_write_gpio(uint8_t handle_index)
+   {
+      this->reset_active_buffer();
+      this->add_to_buffer(this->gpio);
+      this->add_to_buffer(get_numbered_gpio_active_bitmask(this->numbered_gpio_active[handle_index]));
+      this->add_to_buffer(get_numbered_gpio_write_notread_bitmask(this->numbered_gpio_write_notread[handle_index]));
+      this->add_to_buffer(get_lettered_gpio_active_bitmask(this->lettered_gpio_active[handle_index]));
+      this->add_to_buffer(get_lettered_gpio_write_notread_bitmask(this->lettered_gpio_write_notread[handle_index]));
+      int write_result = this->write_feature_report(handle_index);
+      int read_result = this->read_feature_report(handle_index);
+      if(write_result != read_result)
+      {
+         return -1;
+      }
+      return write_result;
+   }
+
+   std::vector<std::string> ft260_interface::get_device_paths(void)
+   {
+      return devices_found;
+   }
 
 }

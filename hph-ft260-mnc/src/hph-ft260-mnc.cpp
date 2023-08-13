@@ -10,8 +10,10 @@ int main(int argc, char* argv[])
    std::vector<std::string> device_paths_to_open;
 
    //device_paths_to_open.emplace_back("errorslol");
-   device_paths_to_open.emplace_back("2-2.3:1.0");
-   device_paths_to_open.emplace_back("2-2.2:1.1");
+   //device_paths_to_open.emplace_back("2-2.3:1.0");
+   //device_paths_to_open.emplace_back("2-2.2:1.1");
+   device_paths_to_open.emplace_back("3-1.3:1.0");
+   device_paths_to_open.emplace_back("3-1.2:1.1");
    //device_paths_to_open.emplace_back("all");
    //device_paths_to_open.emplace_back("");
 
@@ -42,10 +44,16 @@ int main(int argc, char* argv[])
    ft260s.set_as_non_blocking(1);
    */
 
+   std::vector<std::string> active_device_paths = ft260s.get_device_paths();
    for(int i = 0; i < device_count; ++i)
    {
-      ft260s.set_numbered_gpio_active(i, 0b00000101);
-      ft260s.set_lettered_gpio_active(i, 0b00001001);
+      printf("get device paths for handle %d is %s\n", i, active_device_paths[i]);
+   }
+
+   for(int i = 0; i < device_count; ++i)
+   {
+      ft260s.set_numbered_gpio_write_notread(i, 0b00000101);
+      ft260s.set_lettered_gpio_write_notread(i, 0b00001001);
 
       hph::uchar nbm = ft260s.get_numbered_gpio_bitmask(i);
       hph::uchar lbm = ft260s.get_lettered_gpio_bitmask(i);
@@ -56,8 +64,8 @@ int main(int argc, char* argv[])
       bool nbm_set[hph::ft260_gpio_max] = {true, true, true, false, false, false};
       bool lbm_set[hph::ft260_gpio_extra_max] = {true, false, true, false, true, false, false, false};
 
-      ft260s.set_numbered_gpio_active(i, nbm_set);
-      ft260s.set_lettered_gpio_active(i, lbm_set);
+      ft260s.set_numbered_gpio_write_notread(i, nbm_set);
+      ft260s.set_lettered_gpio_write_notread(i, lbm_set);
 
       nbm = ft260s.get_numbered_gpio_bitmask(i);
       lbm = ft260s.get_lettered_gpio_bitmask(i);
@@ -130,15 +138,42 @@ int main(int argc, char* argv[])
       ft260s.add_to_buffer(ft260s.suspend_output_active_high);
       result_size = ft260s.write_feature_report(i);
 
+      /*
       //Ethernet reset not is GPIOE in hph
       bool nbm_set[hph::ft260_gpio_max] = {false, false, false, false, false, false};
       bool lbm_set[hph::ft260_gpio_extra_max] = {false, false, false, false, true, false, false, false};
 
-      ft260s.set_numbered_gpio_active(i, nbm_set);
-      ft260s.set_lettered_gpio_active(i, lbm_set);
+      ft260s.set_numbered_gpio_write_notread(i, nbm_set);
+      ft260s.set_lettered_gpio_write_notread(i, lbm_set);
 
       nbm = ft260s.get_numbered_gpio_bitmask(i);
       lbm = ft260s.get_lettered_gpio_bitmask(i);
+      */
+
+
+/*
+      ft260s.set_numbered_gpio_write_notread(i, 0b00000101);
+      ft260s.set_lettered_gpio_write_notread(i, 0b00001001);
+
+      hph::uchar nbm = ft260s.get_numbered_gpio_bitmask(i);
+      hph::uchar lbm = ft260s.get_lettered_gpio_bitmask(i);
+
+      printf("nbm is %02x\n", nbm);
+      printf("lbm is %02x\n", lbm);
+
+      bool nbm_set[hph::ft260_gpio_max] = {true, true, true, false, false, false};
+      bool lbm_set[hph::ft260_gpio_extra_max] = {true, false, true, false, true, false, false, false};
+
+      ft260s.set_numbered_gpio_write_notread(i, nbm_set);
+      ft260s.set_lettered_gpio_write_notread(i, lbm_set);
+
+      nbm = ft260s.get_numbered_gpio_bitmask(i);
+      lbm = ft260s.get_lettered_gpio_bitmask(i);
+
+      printf("nbm is %02x\n", nbm);
+      printf("lbm is %02x\n", lbm);
+      */
+ 
 
 
 

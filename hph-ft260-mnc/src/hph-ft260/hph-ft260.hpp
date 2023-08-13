@@ -47,13 +47,27 @@ namespace hph
       std::vector<int> get_error_codes(void);
       int is_device_blocking(uint8_t handle_index);
 
-      uchar get_numbered_gpio_bitmask(uint8_t handle_index);
-      uchar get_lettered_gpio_bitmask(uint8_t handle_index);
+      uchar get_numbered_gpio_active_bitmask(uint8_t handle_index);
+      uchar get_lettered_gpio_active_bitmask(uint8_t handle_index);
+
+      uchar get_numbered_gpio_write_notread_bitmask(uint8_t handle_index);
+      uchar get_lettered_gpio_write_notread_bitmask(uint8_t handle_index);
 
       void set_numbered_gpio_active(uint8_t handle_index, uchar bitmask);
       void set_lettered_gpio_active(uint8_t handle_index, uchar bitmask);
       void set_numbered_gpio_active(uint8_t handle_index, bool gpio_set[ft260_gpio_max]);
       void set_lettered_gpio_active(uint8_t handle_index, bool gpio_set[ft260_gpio_extra_max]);
+
+      void set_numbered_gpio_write_notread(uint8_t handle_index, uchar bitmask);
+      void set_lettered_gpio_write_notread(uint8_t handle_index, uchar bitmask);
+      void set_numbered_gpio_write_notread(uint8_t handle_index, bool gpio_set[ft260_gpio_max]);
+      void set_lettered_gpio_write_notread(uint8_t handle_index, bool gpio_set[ft260_gpio_extra_max]);
+
+      int read_gpio(uint8_t handle_index);
+      int write_gpio(uint8_t handle_index);
+      int read_write_gpio(uint8_t handle_index);
+
+      std::vector<std::string> get_device_paths(void);
 
       /*
       void read_numbered_gpio_select(uchar bitmask);
@@ -275,6 +289,8 @@ namespace hph
 
       bool **numbered_gpio_active;
       bool **lettered_gpio_active;
+      bool **numbered_gpio_write_notread;
+      bool **lettered_gpio_write_notread;
 
       uint8_t devices_to_be_opened;
       uint8_t devices_to_be_opened_found;
