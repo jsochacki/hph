@@ -101,6 +101,7 @@ namespace hph
             {
                //need this prior to opening as you do blocking write read test as
                //part of opening
+               allocate_active_buffers(ft260_devices);
                initialize_gpio(ft260_devices);
                for(int i = 0; i < ft260_devices; ++i)
                {
@@ -122,7 +123,7 @@ namespace hph
       }
       else
       {
-         reset_active_buffer();
+         reset_active_buffers(ft260_devices);
          consolidate_used_memory(ft260_devices);
       }
    }
@@ -315,12 +316,12 @@ namespace hph
             local_error_code = hid_device_blocking_state_change_failure_error_code;
          }
 
-         add_to_buffer(chip_version);
+         add_to_buffer(device_handle, chip_version);
          if(read_data(device_handle) < 0)
          {
             local_error_code = hid_device_read_failure_error_code;
          }
-         reset_active_buffer();
+         reset_active_buffer(device_handle);
 
 
          if(set_as_blocking(device_handle) < 0)
@@ -404,6 +405,8 @@ namespace hph
       }
 
 
+      deallocate_active_buffers(ft260_devices);
+      allocate_active_buffers(devices);
       free_gpio(ft260_devices);
       initialize_gpio(devices);
 
@@ -459,22 +462,50 @@ namespace hph
       return (i2c_report_min + ((len)-1) / 4);
    }
 
-   void ft260_interface::reset_active_buffer(void)
+   void ft260_interface::allocate_active_buffers(int ft260_devices)
    {
-      buffer_slots_used = 0;
-      memset(active_buffer, 0, sizeof(active_buffer));
+      buffer_slots_used = (uint8_t*) calloc(ft260_devices, sizeof(uint8_t));
+      active_buffers = (uchar**) calloc(ft260_devices, sizeof(uchar*));
+      for(int handle_index = 0; handle_index < ft260_devices; ++handle_index)
+      {
+         active_buffers[handle_index] = (uchar*) calloc(hph::hph_ft260_max_char_buf, sizeof(uchar));
+      }
+   }
+
+   void ft260_interface::deallocate_active_buffers(int ft260_devices)
+   {
+      for(int handle_index = 0; handle_index < ft260_devices; ++handle_index)
+      {
+         free(active_buffers[handle_index]);
+      }
+      free(buffer_slots_used);
+      free(active_buffers);
+   }
+
+   void ft260_interface::reset_active_buffer(uint8_t handle_index)
+   {
+      buffer_slots_used[handle_index] = 0;
+      memset(active_buffers[handle_index], 0, sizeof(uchar) * hph::hph_ft260_max_char_buf);
+   }
+
+   void ft260_interface::reset_active_buffers(int ft260_devices)
+   {
+      for(int handle_index = 0; handle_index < ft260_devices; ++handle_index)
+      {
+         reset_active_buffer(handle_index);
+      }
    }
 
    int ft260_interface::write_data(uint8_t handle_index)
    {
-      res = hid_write(handles[handle_index], active_buffer, buffer_slots_used);
+      res = hid_write(handles[handle_index], active_buffers[handle_index], buffer_slots_used[handle_index]);
       if(res < 0)
       {
          printf("unable to write: %ls\n", hid_error(handles[handle_index]));
       }
       else
       {
-         reset_active_buffer();
+         reset_active_buffer(handle_index);
       }
 
       return res;
@@ -482,22 +513,22 @@ namespace hph
 
    int ft260_interface::read_data(uint8_t handle_index)
    {
-      memset(active_buffer + 1, 0, sizeof(active_buffer) - 1);
-      res = hid_read(handles[handle_index], active_buffer, sizeof(active_buffer));
+      memset(active_buffers[handle_index] + 1, 0, (sizeof(uchar) * hph::hph_ft260_max_char_buf) - 1);
+      res = hid_read(handles[handle_index], active_buffers[handle_index], (sizeof(uchar) * hph::hph_ft260_max_char_buf));
       if(res < 0)
       {
          printf("unable to read: %ls\n", hid_error(handles[handle_index]));
-         reset_active_buffer();
+         reset_active_buffer(handle_index);
       }
 
       return res;
    }
 
-   void ft260_interface::print_read_data(int count)
+   void ft260_interface::print_read_data(uint8_t handle_index, int count)
    {
       for(int index = 0; index < count; ++index)
       {
-         printf("%02x ", (unsigned int) active_buffer[index]);
+         printf("%02x ", (unsigned int) active_buffers[handle_index][index]);
       }
       printf("\n");
    }
@@ -505,14 +536,14 @@ namespace hph
    int ft260_interface::write_feature_report(uint8_t handle_index)
    {
       //IF YOU DONT RUN WITH PERMISSION YOU WILL GET A SEGMENTATION FAULT
-      res = hid_send_feature_report(handles[handle_index], active_buffer, buffer_slots_used);
+      res = hid_send_feature_report(handles[handle_index], active_buffers[handle_index], buffer_slots_used[handle_index]);
       if(res < 0)
       {
-         printf("unable to send feature report %02x: %ls\n", active_buffer[0], hid_error(handles[handle_index]));
+         printf("unable to send feature report %02x: %ls\n", active_buffers[handle_index][0], hid_error(handles[handle_index]));
       }
       else
       {
-         reset_active_buffer();
+         reset_active_buffer(handle_index);
       }
 
       return res;
@@ -520,13 +551,13 @@ namespace hph
 
    int ft260_interface::read_feature_report(uint8_t handle_index)
    {
-      memset(active_buffer + 1, 0, sizeof(active_buffer) - 1);
+      memset(active_buffers[handle_index] + 1, 0, (sizeof(uchar) * hph::hph_ft260_max_char_buf) - 1);
       //IF YOU DONT RUN WITH PERMISSION YOU WILL GET A SEGMENTATION FAULT
-      res = hid_get_feature_report(handles[handle_index], active_buffer, sizeof(active_buffer));
+      res = hid_get_feature_report(handles[handle_index], active_buffers[handle_index], (sizeof(uchar) * hph::hph_ft260_max_char_buf));
       if(res < 0)
       {
-         printf("unable to get feature report %02x: %ls\n", active_buffer[0], hid_error(handles[handle_index]));
-         reset_active_buffer();
+         printf("unable to get feature report %02x: %ls\n", active_buffers[handle_index][0], hid_error(handles[handle_index]));
+         reset_active_buffer(handle_index);
       }
 
       return res;
@@ -534,23 +565,23 @@ namespace hph
 
    int ft260_interface::read_input_report(uint8_t handle_index)
    {
-      memset(active_buffer + 1, 0, sizeof(active_buffer) - 1);
+      memset(active_buffers[handle_index] + 1, 0, (sizeof(uchar) * hph::hph_ft260_max_char_buf) - 1);
       //IF YOU DONT RUN WITH PERMISSION YOU WILL GET A SEGMENTATION FAULT
-      res = hid_get_input_report(handles[handle_index], active_buffer, sizeof(active_buffer));
+      res = hid_get_input_report(handles[handle_index], active_buffers[handle_index], (sizeof(uchar) * hph::hph_ft260_max_char_buf));
       if(res < 0)
       {
-         printf("unable to get input report %02x: %ls\n", active_buffer[0], hid_error(handles[handle_index]));
-         reset_active_buffer();
+         printf("unable to get input report %02x: %ls\n", active_buffers[handle_index][0], hid_error(handles[handle_index]));
+         reset_active_buffer(handle_index);
       }
 
       return res;
    }
 
-   void ft260_interface::add_to_buffer(uchar value)
+   void ft260_interface::add_to_buffer(uint8_t handle_index, uchar value)
    {
-      active_buffer[buffer_slots_used++] = value;
+      active_buffers[handle_index][buffer_slots_used[handle_index]++] = value;
 #ifdef HPH_FT260_INTERFACE_DEBUG
-      printf("added %02x to buffer slot %d\n", value, buffer_slots_used - 1);
+      printf("added %02x to buffer slot %d\n", value, buffer_slots_used[handle_index] - 1);
 #endif
    }
 
@@ -762,36 +793,36 @@ namespace hph
 
    int ft260_interface::read_gpio(uint8_t handle_index)
    {
-      this->reset_active_buffer();
-      this->add_to_buffer(this->gpio);
-      this->add_to_buffer(get_numbered_gpio_active_bitmask(this->numbered_gpio_active[handle_index]));
-      this->add_to_buffer(get_numbered_gpio_write_notread_bitmask(this->numbered_gpio_write_notread[handle_index]));
-      this->add_to_buffer(get_lettered_gpio_active_bitmask(this->lettered_gpio_active[handle_index]));
-      this->add_to_buffer(get_lettered_gpio_write_notread_bitmask(this->lettered_gpio_write_notread[handle_index]));
+      this->reset_active_buffer(handle_index);
+      this->add_to_buffer(handle_index, this->gpio);
+      this->add_to_buffer(handle_index, get_numbered_gpio_active_bitmask(handle_index));
+      this->add_to_buffer(handle_index, get_numbered_gpio_write_notread_bitmask(handle_index));
+      this->add_to_buffer(handle_index, get_lettered_gpio_active_bitmask(handle_index));
+      this->add_to_buffer(handle_index, get_lettered_gpio_write_notread_bitmask(handle_index));
       return (this->read_feature_report(handle_index));
    }
 
 
    int ft260_interface::write_gpio(uint8_t handle_index)
    {
-      this->reset_active_buffer();
-      this->add_to_buffer(this->gpio);
-      this->add_to_buffer(get_numbered_gpio_active_bitmask(this->numbered_gpio_active[handle_index]));
-      this->add_to_buffer(get_numbered_gpio_write_notread_bitmask(this->numbered_gpio_write_notread[handle_index]));
-      this->add_to_buffer(get_lettered_gpio_active_bitmask(this->lettered_gpio_active[handle_index]));
-      this->add_to_buffer(get_lettered_gpio_write_notread_bitmask(this->lettered_gpio_write_notread[handle_index]));
+      this->reset_active_buffer(handle_index);
+      this->add_to_buffer(handle_index, this->gpio);
+      this->add_to_buffer(handle_index, get_numbered_gpio_active_bitmask(handle_index));
+      this->add_to_buffer(handle_index, get_numbered_gpio_write_notread_bitmask(handle_index));
+      this->add_to_buffer(handle_index, get_lettered_gpio_active_bitmask(handle_index));
+      this->add_to_buffer(handle_index, get_lettered_gpio_write_notread_bitmask(handle_index));
       return (this->write_feature_report(handle_index));
    }
 
 
    int ft260_interface::read_write_gpio(uint8_t handle_index)
    {
-      this->reset_active_buffer();
-      this->add_to_buffer(this->gpio);
-      this->add_to_buffer(get_numbered_gpio_active_bitmask(this->numbered_gpio_active[handle_index]));
-      this->add_to_buffer(get_numbered_gpio_write_notread_bitmask(this->numbered_gpio_write_notread[handle_index]));
-      this->add_to_buffer(get_lettered_gpio_active_bitmask(this->lettered_gpio_active[handle_index]));
-      this->add_to_buffer(get_lettered_gpio_write_notread_bitmask(this->lettered_gpio_write_notread[handle_index]));
+      this->reset_active_buffer(handle_index);
+      this->add_to_buffer(handle_index, this->gpio);
+      this->add_to_buffer(handle_index, get_numbered_gpio_active_bitmask(handle_index));
+      this->add_to_buffer(handle_index, get_numbered_gpio_write_notread_bitmask(handle_index));
+      this->add_to_buffer(handle_index, get_lettered_gpio_active_bitmask(handle_index));
+      this->add_to_buffer(handle_index, get_lettered_gpio_write_notread_bitmask(handle_index));
       int write_result = this->write_feature_report(handle_index);
       int read_result = this->read_feature_report(handle_index);
       if(write_result != read_result)

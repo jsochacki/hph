@@ -27,17 +27,20 @@ namespace hph
 
       //int initialize_as_gpio(uint8_t handle_index);
 
-      void reset_active_buffer(void);
+      void allocate_active_buffers(int ft260_devices);
+      void deallocate_active_buffers(int ft260_devices);
+      void reset_active_buffer(uint8_t handle_index);
+      void reset_active_buffers(int ft260_devices);
 
       int write_data(uint8_t handle_index);
       int read_data(uint8_t handle_index);
-      void print_read_data(int count);
+      void print_read_data(uint8_t handle_index, int count);
 
       int write_feature_report(uint8_t handle_index);
       int read_feature_report(uint8_t handle_index);
       int read_input_report(uint8_t handle_index);
 
-      void add_to_buffer(uchar value);
+      void add_to_buffer(uint8_t handle_index, uchar value);
 
       int set_as_non_blocking(uint8_t handle_index);
       int set_as_blocking(uint8_t handle_index);
@@ -269,8 +272,8 @@ namespace hph
       int devices;
       std::vector<int> corresponding_interface_numbers;
 
-      unsigned char active_buffer[hph_ft260_max_char_buf];
-      uint8_t buffer_slots_used;
+      uchar **active_buffers;
+      uint8_t *buffer_slots_used;
 
       wchar_t wstr[hph_ft260_max_str_len];
 
