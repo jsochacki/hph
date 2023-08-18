@@ -70,6 +70,12 @@ namespace hph
       int write_gpio(uint8_t handle_index);
       int read_write_gpio(uint8_t handle_index);
 
+      int read_gpio(uint8_t handle_index, uchar numbered_bitmask, uchar lettered_bitmask);
+      int write_gpio(uint8_t handle_index, uchar numbered_bitmask, uchar lettered_bitmask);
+      int read_gpio(uint8_t handle_index, bool numbered_gpio_set[ft260_gpio_max], bool lettered_gpio_set[ft260_gpio_extra_max]);
+      int write_gpio(uint8_t handle_index, bool numbered_gpio_set[ft260_gpio_max], bool lettered_gpio_set[ft260_gpio_extra_max]);
+
+
       std::vector<std::string> get_device_paths(void);
 
       /*

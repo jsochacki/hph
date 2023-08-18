@@ -138,18 +138,55 @@ int main(int argc, char* argv[])
       ft260s.add_to_buffer(i, ft260s.suspend_output_active_high);
       result_size = ft260s.write_feature_report(i);
 
+
+      {
+      //Write gpio2 on eval board high then low
+      bool nbm_set[hph::ft260_gpio_max] = {false, true, false, false, false, false};
+      bool lbm_set[hph::ft260_gpio_extra_max] = {false, false, false, false, false, false, false, false};
+
+      result_size = ft260s.write_gpio(i, nbm_set, lbm_set);
+      ft260s.reset_active_buffer(i);
+      }
+
+      sleep(1);
+
+      {
+      bool nbm_set[hph::ft260_gpio_max] = {true, true, true, true, true, true};
+      bool lbm_set[hph::ft260_gpio_extra_max] = {true, true, true, true, true, true, true, true};
+
+      result_size = ft260s.read_gpio(i, nbm_set, lbm_set);
+      ft260s.print_read_data(i, result_size);
+      ft260s.reset_active_buffer(i);
+      }
+
+      sleep(1);
+
+      {
+      bool nbm_set[hph::ft260_gpio_max] = {false, false, false, false, false, false};
+      bool lbm_set[hph::ft260_gpio_extra_max] = {false, false, false, false, false, false, false, false};
+
+      result_size = ft260s.write_gpio(i, nbm_set, lbm_set);
+      ft260s.reset_active_buffer(i);
+      }
+
+      sleep(1);
+
+      {
+      bool nbm_set[hph::ft260_gpio_max] = {true, true, true, true, true, true};
+      bool lbm_set[hph::ft260_gpio_extra_max] = {true, true, true, true, true, true, true, true};
+
+      result_size = ft260s.read_gpio(i, nbm_set, lbm_set);
+      ft260s.print_read_data(i, result_size);
+      ft260s.reset_active_buffer(i);
+      }
+
       /*
       //Ethernet reset not is GPIOE in hph
       bool nbm_set[hph::ft260_gpio_max] = {false, false, false, false, false, false};
       bool lbm_set[hph::ft260_gpio_extra_max] = {false, false, false, false, true, false, false, false};
 
-      ft260s.set_numbered_gpio_write_notread(i, nbm_set);
-      ft260s.set_lettered_gpio_write_notread(i, lbm_set);
-
-      nbm = ft260s.get_numbered_gpio_bitmask(i);
-      lbm = ft260s.get_lettered_gpio_bitmask(i);
+      ft260s.write_gpio(i, nbm_set, lbm_set);
       */
-
 
 /*
       ft260s.set_numbered_gpio_write_notread(i, 0b00000101);

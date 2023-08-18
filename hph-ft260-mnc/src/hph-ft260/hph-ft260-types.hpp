@@ -17,6 +17,8 @@ namespace hph
    const ushort hph_ft260_vendor_id    = 0x0403;
    const ushort hph_ft260_product_id   = 0x6030;
 
+   constexpr ushort hph_ft260_max_char_buf_allocation_size = (sizeof(uchar) * hph_ft260_max_char_buf);
+
    const int device_not_found_index = -1;
 
    const int device_not_used_error_code = -1;
@@ -49,6 +51,13 @@ namespace hph
 
    constexpr uint16_t ft260_gpio_total = (ft260_gpio_max + ft260_gpio_extra_max);
    constexpr uint16_t ft260_gpio_mask = (static_cast<uint16_t>(~(static_cast<uint16_t>(0xffff) << ft260_gpio_total)));
+
+   const uchar read_only_bitmask = 0b00000000;
+   const uchar write_only_bitmask = 0b11111111;
+   const bool read_only_numbered_gpio_set[ft260_gpio_max] = {false, false, false, false, false, false};
+   const bool read_only_lettered_gpio_set[ft260_gpio_extra_max] = {false, false, false, false, false, false, false, false};
+   const bool write_only_numbered_gpio_set[ft260_gpio_max] = {true, true, true, true, true, true};
+   const bool write_only_lettered_gpio_set[ft260_gpio_extra_max] = {true, true, true, true, true, true, true, true};
 
 }   // namespace hph
 
