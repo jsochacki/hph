@@ -833,39 +833,39 @@ namespace hph
    }
 
 
-   int ft260_interface::read_gpio(uint8_t handle_index, uchar numbered_bitmask, uchar lettered_bitmask)
+   int ft260_interface::read_gpio(uint8_t handle_index, uchar numbered_bitmask_active, uchar lettered_bitmask_active, uchar numbered_bitmask_write_notread, uchar lettered_bitmask_write_notread)
    {
-      set_numbered_gpio_active(handle_index, numbered_bitmask);
-      set_lettered_gpio_active(handle_index, lettered_bitmask);
-      set_numbered_gpio_write_notread(handle_index, hph::read_only_bitmask);
-      set_lettered_gpio_write_notread(handle_index, hph::read_only_bitmask);
+      set_numbered_gpio_active(handle_index, numbered_bitmask_active);
+      set_lettered_gpio_active(handle_index, lettered_bitmask_active);
+      set_numbered_gpio_write_notread(handle_index, numbered_bitmask_write_notread);
+      set_lettered_gpio_write_notread(handle_index, lettered_bitmask_write_notread);
       return (read_gpio(handle_index));
    }
 
-   int ft260_interface::write_gpio(uint8_t handle_index, uchar numbered_bitmask, uchar lettered_bitmask)
+   int ft260_interface::write_gpio(uint8_t handle_index, uchar numbered_bitmask_active, uchar lettered_bitmask_active, uchar numbered_bitmask_write_notread, uchar lettered_bitmask_write_notread)
    {
-      set_numbered_gpio_active(handle_index, numbered_bitmask);
-      set_lettered_gpio_active(handle_index, lettered_bitmask);
-      set_numbered_gpio_write_notread(handle_index, hph::write_only_bitmask);
-      set_lettered_gpio_write_notread(handle_index, hph::write_only_bitmask);
+      set_numbered_gpio_active(handle_index, numbered_bitmask_active);
+      set_lettered_gpio_active(handle_index, lettered_bitmask_active);
+      set_numbered_gpio_write_notread(handle_index, numbered_bitmask_write_notread);
+      set_lettered_gpio_write_notread(handle_index, lettered_bitmask_write_notread);
       return (write_gpio(handle_index));
    }
 
-   int ft260_interface::read_gpio(uint8_t handle_index, bool numbered_gpio_set[ft260_gpio_max], bool lettered_gpio_set[ft260_gpio_extra_max])
+   int ft260_interface::read_gpio(uint8_t handle_index, bool numbered_gpio_set_active[ft260_gpio_max], bool lettered_gpio_set_active[ft260_gpio_extra_max], bool numbered_gpio_set_write_notread[ft260_gpio_max], bool lettered_gpio_set_write_notread[ft260_gpio_extra_max])
    {
-      set_numbered_gpio_active(handle_index, numbered_gpio_set);
-      set_lettered_gpio_active(handle_index, lettered_gpio_set);
-      set_numbered_gpio_write_notread(handle_index, const_cast<bool *>(hph::read_only_numbered_gpio_set));
-      set_lettered_gpio_write_notread(handle_index, const_cast<bool *>(hph::read_only_lettered_gpio_set));
+      set_numbered_gpio_active(handle_index, numbered_gpio_set_active);
+      set_lettered_gpio_active(handle_index, lettered_gpio_set_active);
+      set_numbered_gpio_write_notread(handle_index, numbered_gpio_set_write_notread);
+      set_lettered_gpio_write_notread(handle_index, lettered_gpio_set_write_notread);
       return (read_gpio(handle_index));
    }
 
-   int ft260_interface::write_gpio(uint8_t handle_index, bool numbered_gpio_set[ft260_gpio_max], bool lettered_gpio_set[ft260_gpio_extra_max])
+   int ft260_interface::write_gpio(uint8_t handle_index, bool numbered_gpio_set_active[ft260_gpio_max], bool lettered_gpio_set_active[ft260_gpio_extra_max], bool numbered_gpio_set_write_notread[ft260_gpio_max], bool lettered_gpio_set_write_notread[ft260_gpio_extra_max])
    {
-      set_numbered_gpio_active(handle_index, numbered_gpio_set);
-      set_lettered_gpio_active(handle_index, lettered_gpio_set);
-      set_numbered_gpio_write_notread(handle_index, const_cast<bool *>(hph::write_only_numbered_gpio_set));
-      set_lettered_gpio_write_notread(handle_index, const_cast<bool *>(hph::write_only_lettered_gpio_set));
+      set_numbered_gpio_active(handle_index, numbered_gpio_set_active);
+      set_lettered_gpio_active(handle_index, lettered_gpio_set_active);
+      set_numbered_gpio_write_notread(handle_index, numbered_gpio_set_write_notread);
+      set_lettered_gpio_write_notread(handle_index, lettered_gpio_set_write_notread);
       return (write_gpio(handle_index));
    }
 

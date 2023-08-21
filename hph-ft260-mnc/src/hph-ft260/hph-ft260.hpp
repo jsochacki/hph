@@ -70,11 +70,11 @@ namespace hph
       int write_gpio(uint8_t handle_index);
       int read_write_gpio(uint8_t handle_index);
 
-      int read_gpio(uint8_t handle_index, uchar numbered_bitmask, uchar lettered_bitmask);
-      int write_gpio(uint8_t handle_index, uchar numbered_bitmask, uchar lettered_bitmask);
-      int read_gpio(uint8_t handle_index, bool numbered_gpio_set[ft260_gpio_max], bool lettered_gpio_set[ft260_gpio_extra_max]);
-      int write_gpio(uint8_t handle_index, bool numbered_gpio_set[ft260_gpio_max], bool lettered_gpio_set[ft260_gpio_extra_max]);
 
+      int read_gpio(uint8_t handle_index, uchar numbered_bitmask_active, uchar lettered_bitmask_active, uchar numbered_bitmask_write_notread, uchar lettered_bitmask_write_notread);
+      int write_gpio(uint8_t handle_index, uchar numbered_bitmask_active, uchar lettered_bitmask_active, uchar numbered_bitmask_write_notread, uchar lettered_bitmask_write_notread);
+      int read_gpio(uint8_t handle_index, bool numbered_gpio_set_active[ft260_gpio_max], bool lettered_gpio_set_active[ft260_gpio_extra_max], bool numbered_gpio_set_write_notread[ft260_gpio_max], bool lettered_gpio_set_write_notread[ft260_gpio_extra_max]);
+      int write_gpio(uint8_t handle_index, bool numbered_gpio_set_active[ft260_gpio_max], bool lettered_gpio_set_active[ft260_gpio_extra_max], bool numbered_gpio_set_write_notread[ft260_gpio_max], bool lettered_gpio_set_write_notread[ft260_gpio_extra_max]);
 
       std::vector<std::string> get_device_paths(void);
 
