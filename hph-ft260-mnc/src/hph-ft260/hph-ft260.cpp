@@ -531,6 +531,13 @@ namespace hph
          printf("%02x ", (unsigned int) active_buffers[handle_index][index]);
       }
       printf("\n");
+      #ifdef HPH_FT260_PRINT_DEBUG
+      for(int index = 0; index < count; ++index)
+      {
+         hpv::print_bin(active_buffers[handle_index][index]);
+      }
+      printf("\n");
+      #endif
    }
 
    int ft260_interface::write_feature_report(uint8_t handle_index)
@@ -791,7 +798,7 @@ namespace hph
       }
    }
 
-   int ft260_interface::read_gpio(uint8_t handle_index)
+   void ft260_interface::prep_gpio_buffer(uint8_t handle_index)
    {
       reset_active_buffer(handle_index);
       add_to_buffer(handle_index, gpio);
@@ -799,31 +806,27 @@ namespace hph
       add_to_buffer(handle_index, get_numbered_gpio_write_notread_bitmask(handle_index));
       add_to_buffer(handle_index, get_lettered_gpio_active_bitmask(handle_index));
       add_to_buffer(handle_index, get_lettered_gpio_write_notread_bitmask(handle_index));
+   }
+
+   int ft260_interface::read_gpio(uint8_t handle_index)
+   {
+      prep_gpio_buffer(handle_index);
       return (read_feature_report(handle_index));
    }
 
 
    int ft260_interface::write_gpio(uint8_t handle_index)
    {
-      reset_active_buffer(handle_index);
-      add_to_buffer(handle_index, gpio);
-      add_to_buffer(handle_index, get_numbered_gpio_active_bitmask(handle_index));
-      add_to_buffer(handle_index, get_numbered_gpio_write_notread_bitmask(handle_index));
-      add_to_buffer(handle_index, get_lettered_gpio_active_bitmask(handle_index));
-      add_to_buffer(handle_index, get_lettered_gpio_write_notread_bitmask(handle_index));
+      prep_gpio_buffer(handle_index);
       return (write_feature_report(handle_index));
    }
 
 
    int ft260_interface::read_write_gpio(uint8_t handle_index)
    {
-      reset_active_buffer(handle_index);
-      add_to_buffer(handle_index, gpio);
-      add_to_buffer(handle_index, get_numbered_gpio_active_bitmask(handle_index));
-      add_to_buffer(handle_index, get_numbered_gpio_write_notread_bitmask(handle_index));
-      add_to_buffer(handle_index, get_lettered_gpio_active_bitmask(handle_index));
-      add_to_buffer(handle_index, get_lettered_gpio_write_notread_bitmask(handle_index));
+      prep_gpio_buffer(handle_index);
       int write_result = write_feature_report(handle_index);
+      prep_gpio_buffer(handle_index);
       int read_result = read_feature_report(handle_index);
       if(write_result != read_result)
       {

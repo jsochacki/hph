@@ -6,6 +6,8 @@
 //#include "hph-hidapi.hpp"
 #include <hidapi/hidapi.h>
 
+#include "debug.hpp" // delete when ready
+//#define HPH_FT260_PRINT_DEBUG
 //#define HPH_FT260_INTERFACE_DEBUG
 
 namespace hph

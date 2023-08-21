@@ -66,6 +66,7 @@ namespace hph
       void set_numbered_gpio_write_notread(uint8_t handle_index, bool gpio_set[ft260_gpio_max]);
       void set_lettered_gpio_write_notread(uint8_t handle_index, bool gpio_set[ft260_gpio_extra_max]);
 
+      void prep_gpio_buffer(uint8_t handle_index);
       int read_gpio(uint8_t handle_index);
       int write_gpio(uint8_t handle_index);
       int read_write_gpio(uint8_t handle_index);
