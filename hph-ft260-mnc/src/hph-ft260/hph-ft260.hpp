@@ -15,6 +15,8 @@
 
 //#define HPH_FT260_INTERFACE_DEBUG
 
+// Note that interface 0 is for I2C and interface 1 is for UART
+
 namespace hph
 {
    class ft260_interface
@@ -160,6 +162,13 @@ namespace hph
          i2c_status_bus_busy    = 0x40,
       };
 
+      /* composite response codes in i2c status report */
+      enum : uchar
+      {
+         i2c_status_any_error = (i2c_status_error | i2c_status_arbitr_lost),
+         i2c_status_slave_unresponsive = (i2c_status_addr_no_ack | i2c_status_data_no_ack),
+      };
+
       /* i2c conditions flags */
       enum : uchar
       {
@@ -227,21 +236,51 @@ namespace hph
 
       enum : uchar
       {
-         i2c_clock_12mhz  = 0x00,
-         i2c_clock_24mhz  = 0x01,
-         i2c_clock_48mhz  = 0x02,
-      };
-
-      enum : uchar
-      {
-         i2c_clock_speed_100kbps  = 0x64,
-         i2c_clock_speed_400kbps  = 0x01
+         device_clock_12mhz  = 0x00,
+         device_clock_24mhz  = 0x01,
+         device_clock_48mhz  = 0x02,
       };
 
       enum : uchar
       {
          i2c_mode_disabled = 0x00,
          i2c_mode_enabled = 0x01
+      };
+
+      enum : uchar
+      {
+         uart_mode_disabled = 0x00,
+         uart_enabled_rts_cts_mode = 0x01,
+         uart_enabled_dtr_dsr_mode = 0x02,
+         uart_enabled_xon_xoff_mode = 0x03,
+         uart_enabled_no_flow_control_mode = 0x04
+      };
+
+      enum : uchar
+      {
+         interrupt_disabled = 0x00,
+         interrupt_enabled = 0x01
+      };
+
+      enum : uchar
+      {
+         uart_dcd_ri_disabled = 0x00,
+         uart_dcd_ri_enabled = 0x01
+      };
+
+      enum : uchar
+      {
+         interrupt_type_rising_edge = 0x00,
+         interrupt_type_level_high = 0x01,
+         interrupt_type_falling_edge = 0x02,
+         interrupt_type_level_low = 0x03
+      };
+
+      enum : uchar
+      {
+         interrupt_type_level_delay_1ms = 0x01,
+         interrupt_type_level_delay_5ms = 0x02,
+         interrupt_type_level_delay_30ms = 0x03
       };
 
       enum : uchar
@@ -254,6 +293,18 @@ namespace hph
       {
          uart_ri_wakeup_disabled = 0x00,
          uart_ri_wakeup_enabled = 0x01
+      };
+
+      enum : uchar
+      {
+         uart_ri_wakeup_rising_edge = 0x00,
+         uart_ri_wakeup_falling_edge = 0x01
+      };
+
+      enum : uchar
+      {
+         i2c_clock_speed_100kbps  = 0x64,
+         i2c_clock_speed_400kbps  = 0x01
       };
 
 
