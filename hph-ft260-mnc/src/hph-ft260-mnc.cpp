@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
    //device_paths_to_open.emplace_back("2-2.3:1.0");
    //device_paths_to_open.emplace_back("2-2.2:1.1");
    //device_paths_to_open.emplace_back("3-1.3:1.0");
-   device_paths_to_open.emplace_back("3-1.2:1.1");
+   //device_paths_to_open.emplace_back("3-1.2:1.1");
    device_paths_to_open.emplace_back("3-1.2:1.0");
    //device_paths_to_open.emplace_back("all");
    //device_paths_to_open.emplace_back("");
@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
    hph::mnc::check_errors(ft260s, device_error_codes);
    hph::mnc::display_active_paths(ft260s);
 
-   for(uint8_t device = 0; device < 2; ++device)
+   for(uint8_t device = 0; device < 1; ++device)
    {
       //printf("interface number is %d\n", ft260s.corresponding_interface_numbers[device]);
       hph::mnc::initialize_device_for_non_hid_i2c_and_gpio(ft260s, device);

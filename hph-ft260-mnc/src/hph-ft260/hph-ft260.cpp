@@ -472,6 +472,18 @@ namespace hph
       }
    }
 
+   /*
+   void ft260_interface::allocate_i2c_temp_buffers(int ft260_devices)
+   {
+      buffer_slots_used = (uint8_t*) calloc(ft260_devices, sizeof(uint8_t));
+      active_buffers = (uchar**) calloc(ft260_devices, sizeof(uchar*));
+      for(int handle_index = 0; handle_index < ft260_devices; ++handle_index)
+      {
+         active_buffers[handle_index] = (uchar*) calloc(hph::hph_ft260_max_char_buf, sizeof(uchar));
+      }
+   }
+   */
+
    void ft260_interface::deallocate_active_buffers(int ft260_devices)
    {
       for(int handle_index = 0; handle_index < ft260_devices; ++handle_index)
@@ -513,7 +525,8 @@ namespace hph
 
    int ft260_interface::read_data(uint8_t handle_index)
    {
-      memset(active_buffers[handle_index] + 1, 0, hph::hph_ft260_max_char_buf_allocation_size - 1);
+      //memset(active_buffers[handle_index] + 1, 0, hph::hph_ft260_max_char_buf_allocation_size - 1);
+      memset(active_buffers[handle_index], 0, hph::hph_ft260_max_char_buf_allocation_size);
       res = hid_read(handles[handle_index], active_buffers[handle_index], hph::hph_ft260_max_char_buf_allocation_size);
       if(res < 0)
       {

@@ -2,6 +2,8 @@
 #define HPH_FT260_MNC_FUNCTIONS_H_
 
 #include "hph-ft260.hpp"
+#include "isl9122a_library.hpp"
+#include "ad5602bksz_library.hpp"
 
 namespace hph
 {

@@ -332,6 +332,8 @@ namespace hph
 
       uchar **active_buffers;
       uint8_t *buffer_slots_used;
+      uchar **i2c_temp_buffers;
+      uint8_t *i2c_temp_buffer_slots_used;
 
       wchar_t wstr[hph_ft260_max_str_len];
 
