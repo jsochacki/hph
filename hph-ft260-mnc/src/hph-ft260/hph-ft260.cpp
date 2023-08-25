@@ -890,4 +890,9 @@ namespace hph
       return devices_found;
    }
 
+   uint8_t ft260_interface::get_i2c_report_address(uint8_t message_length_in_bytes)
+   {
+      return (i2c_report_min + i2c_data_report_id(message_length_in_bytes));
+   }
+
 }

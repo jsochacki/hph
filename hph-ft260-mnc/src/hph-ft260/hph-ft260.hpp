@@ -81,6 +81,8 @@ namespace hph
 
       std::vector<std::string> get_device_paths(void);
 
+      uint8_t get_i2c_report_address(uint8_t message_length_in_bytes);
+
       /*
       void read_numbered_gpio_select(uchar bitmask);
       void read_numbered_gpio_value(uchar bitmask);

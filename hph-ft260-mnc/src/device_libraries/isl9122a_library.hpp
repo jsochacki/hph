@@ -1,6 +1,7 @@
 #ifndef ISL9122A_LIBRARY_H_
 #define ISL9122A_LIBRARY_H_
 
+#include "hph-ft260.hpp"
 #include <cstdint>
 
 namespace isl9122a
@@ -16,7 +17,7 @@ namespace isl9122a
    constexpr double vset_value_max_double = 5.375;
    constexpr uint8_t vset_value_min = vset_value_min_double / vset_value_resolution;
    constexpr uint8_t vset_value_max = vset_value_max_double / vset_value_resolution;
-   constexpr float vset_range = vset_value_max - vset_value_min;
+   constexpr uint16_t vset_range = vset_value_max - vset_value_min;
 
    enum : uint8_t
    {
@@ -59,8 +60,9 @@ namespace isl9122a
 
    const uint8_t message_packet_size_in_bytes = 2;
 
+   uint8_t get_value_from_percent(uint16_t percent);
    void initialize_system_fan(hph::ft260_interface &ft260s, uint8_t device_handle);
-   void set_fan_to_percent(hph::ft260_interface &ft260s, uint8_t device_handle, float percent);
+   void set_fan_to_percent(hph::ft260_interface &ft260s, uint8_t device_handle, uint16_t percent);
 }   // namespace isl9122a
 
 #endif /* ISL9122A_LIBRARY_H_ */

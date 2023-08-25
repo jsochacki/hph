@@ -17,6 +17,8 @@ LDFLAGS+=-lhidapi-libusb
 #LDFLAGS+=-lhidapi-hidraw
 # Need this for string library and wchar_t operations
 LDFLAGS+=-lstdc++
+# Need this for math library operations
+LDFLAGS+=-lm
 
 CPPFLAGS ?= $(INC_FLAGS) -MMD -MP
 
