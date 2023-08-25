@@ -13,9 +13,10 @@ int main(int argc, char* argv[])
    //device_paths_to_open.emplace_back("2-2.2:1.1");
    //device_paths_to_open.emplace_back("3-1.3:1.0");
    //device_paths_to_open.emplace_back("3-1.2:1.1");
-   device_paths_to_open.emplace_back("3-1.2:1.0");
+   //device_paths_to_open.emplace_back("3-1.2:1.0");
    //device_paths_to_open.emplace_back("all");
    //device_paths_to_open.emplace_back("");
+   device_paths_to_open.emplace_back("2-2.2:1.0");
 
    hph::ft260_interface ft260s(device_paths_to_open);
 
@@ -31,7 +32,10 @@ int main(int argc, char* argv[])
       hph::mnc::enable_on_fan(ft260s, device);
       hph::mnc::reset_ethernet_chip(ft260s, device);
 
-      hph::mnc::test_i2c(ft260s, device);
+      isl9122a::initialize_system_fan(ft260s, device);
+      isl9122a::set_fan_to_percent(ft260s, device, 0);
+      isl9122a::set_fan_to_percent(ft260s, device, 50);
+      isl9122a::set_fan_to_percent(ft260s, device, 100);
    }
 
    return 0;

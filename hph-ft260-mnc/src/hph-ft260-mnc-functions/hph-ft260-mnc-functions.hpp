@@ -4,6 +4,7 @@
 #include "hph-ft260.hpp"
 #include "isl9122a_library.hpp"
 #include "ad5602bksz_library.hpp"
+#include "max11603eee_library.hpp"
 
 namespace hph
 {

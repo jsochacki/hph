@@ -208,7 +208,7 @@ namespace hph
 
          //uint8_t report_id = ft260s.i2c_data_report_id(1);
 
-
+         /*
          double dac_output_voltage = 1.0;
 
          uint8_t dac_byte_value = static_cast<uint8_t>(ad5602bksz::ad5602bksz_bits_per_volt * dac_output_voltage);
@@ -224,34 +224,8 @@ namespace hph
          ft260s.add_to_buffer(device_handle, isl9122a::intflg_address);
          ft260s.add_to_buffer(device_handle, isl9122a::intflg_value);
          result_size = ft260s.write_data(device_handle);
-
-
-         /*
-         printf("test write I2C for device %d\n", device_handle);
-         ft260s.add_to_buffer(device_handle, ft260s.i2c_report_min);
-         ft260s.add_to_buffer(device_handle, isl9122a::isl9122a_address); //address
-         ft260s.add_to_buffer(device_handle, ft260s.flag_start_stop); //transaction type
-         ft260s.add_to_buffer(device_handle, 0b00000001);  //length
-         ft260s.add_to_buffer(device_handle, isl9122a::intflg_address);
-         ft260s.add_to_buffer(device_handle, isl9122a::intflg_value);
-         result_size = ft260s.write_data(device_handle);
-
-         ft260s.add_to_buffer(device_handle, ft260s.i2c_report_min);
-         ft260s.add_to_buffer(device_handle, isl9122a::isl9122a_address); //address
-         ft260s.add_to_buffer(device_handle, ft260s.flag_start_stop); //transaction type
-         ft260s.add_to_buffer(device_handle, 0b00000001);  //length
-         ft260s.add_to_buffer(device_handle, isl9122a::conv_address);
-         ft260s.add_to_buffer(device_handle, isl9122a::conv_value);
-         result_size = ft260s.write_data(device_handle);
-
-         ft260s.add_to_buffer(device_handle, ft260s.i2c_report_min);
-         ft260s.add_to_buffer(device_handle, isl9122a::isl9122a_address); //address
-         ft260s.add_to_buffer(device_handle, ft260s.flag_start_stop); //transaction type
-         ft260s.add_to_buffer(device_handle, 0b00000001);  //length
-         ft260s.add_to_buffer(device_handle, isl9122a::vset_address);
-         ft260s.add_to_buffer(device_handle, isl9122a::vset_value);
-         result_size = ft260s.write_data(device_handle);
          */
+
 
 
          /*
