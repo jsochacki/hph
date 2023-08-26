@@ -20,7 +20,10 @@ namespace ad5602bksz
    {
       uint8_t dac_byte_value = get_value_from_percent(percent);
 
-      printf("Setting System LCD Screen backlight to value %u for %u percent operation\n",
+      printf("Setting System LCD Screen backlight to %f V"
+             ", binary value %u, for %u percent operation\n",
+             (dac_byte_value
+             / get_ad5602bksz_bits_per_volt(default_ad5602bksz_voltage_reference)),
              dac_byte_value,
              percent);
 

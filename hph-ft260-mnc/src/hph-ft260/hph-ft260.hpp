@@ -36,6 +36,7 @@ namespace hph
 
       int write_data(uint8_t handle_index);
       int read_data(uint8_t handle_index);
+      uint8_t get_data_at_offset(uint8_t handle_index, uint8_t offset);
       void print_read_data(uint8_t handle_index, int count);
 
       int write_feature_report(uint8_t handle_index);

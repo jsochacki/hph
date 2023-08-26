@@ -525,8 +525,8 @@ namespace hph
 
    int ft260_interface::read_data(uint8_t handle_index)
    {
-      //memset(active_buffers[handle_index] + 1, 0, hph::hph_ft260_max_char_buf_allocation_size - 1);
-      memset(active_buffers[handle_index], 0, hph::hph_ft260_max_char_buf_allocation_size);
+      memset(active_buffers[handle_index] + buffer_slots_used[handle_index], 0, hph::hph_ft260_max_char_buf_allocation_size - buffer_slots_used[handle_index]);
+      //memset(active_buffers[handle_index], 0, hph::hph_ft260_max_char_buf_allocation_size);
       res = hid_read(handles[handle_index], active_buffers[handle_index], hph::hph_ft260_max_char_buf_allocation_size);
       if(res < 0)
       {
@@ -535,6 +535,11 @@ namespace hph
       }
 
       return res;
+   }
+
+   uint8_t ft260_interface::get_data_at_offset(uint8_t handle_index, uint8_t offset)
+   {
+      return (active_buffers[handle_index][buffer_slots_used[handle_index] + offset]);
    }
 
    void ft260_interface::print_read_data(uint8_t handle_index, int count)
