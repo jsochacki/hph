@@ -105,19 +105,22 @@ namespace hph
       std::wstring tempstr4(dev_to_find.product_string);
       for(; cur_dev; cur_dev = cur_dev->next)
       {
-         std::wstring tempstr1(cur_dev->manufacturer_string);
-         std::wstring tempstr3(cur_dev->product_string);
-         if((tempstr1 == tempstr2)
-         && (tempstr3 == tempstr4)
-         && (cur_dev->vendor_id == dev_to_find.vendor_id)
-         && (cur_dev->product_id == dev_to_find.product_id))
+         if((cur_dev->manufacturer_string != NULL) && (cur_dev->product_string != NULL))
          {
-            //hid.c uses strdup to set path member
-            //strdup which Returns a pointer to a null-terminated byte string
-            //so we can use strlen for length of char array
-            devices_found.emplace_back(cur_dev->path);
-            corresponding_interface_numbers.push_back(cur_dev->interface_number);
-            ++found_device_count;
+            std::wstring tempstr1(cur_dev->manufacturer_string);
+            std::wstring tempstr3(cur_dev->product_string);
+            if((tempstr1 == tempstr2)
+               && (tempstr3 == tempstr4)
+               && (cur_dev->vendor_id == dev_to_find.vendor_id)
+               && (cur_dev->product_id == dev_to_find.product_id))
+               {
+                  //hid.c uses strdup to set path member
+                  //strdup which Returns a pointer to a null-terminated byte string
+                  //so we can use strlen for length of char array
+                  devices_found.emplace_back(cur_dev->path);
+                  corresponding_interface_numbers.push_back(cur_dev->interface_number);
+                  ++found_device_count;
+               }
          }
       }
 
