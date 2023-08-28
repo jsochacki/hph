@@ -28,23 +28,23 @@ int main(int argc, char* argv[])
 
    for(uint8_t device = 0; device < 1; ++device)
    {
+   #ifdef HPH_MNC_STARTUP_EXECUTIBLE
       //JUST FOR DEBUG , DONT ACTUALLY DO THIS PART I>E> MAKE SURE TO LEAVE AS BLOCKING
-      ft260s.set_as_non_blocking(device);
+      //ft260s.set_as_non_blocking(device);
       //printf("interface number is %d\n", ft260s.corresponding_interface_numbers[device]);
       hph::mnc::initialize_device_for_non_hid_i2c_and_gpio(ft260s, device);
 
       //hph::mnc::enable_on_fan(ft260s, device);
       hph::mnc::reset_ethernet_chip(ft260s, device);
 
-      isl9122a::initialize_system_fan(ft260s, device);
-      isl9122a::set_fan_to_percent(ft260s, device, 0);
-      isl9122a::set_fan_to_percent(ft260s, device, 50);
-      //isl9122a::set_fan_to_percent(ft260s, device, 100);
+      hph::mnc::initialize_fan(ft260s, device);
+      hph::mnc::turn_fan_up(ft260s, device);
 
-      //ad5602bksz::set_dac_level_to_percent(ft260s, device, 0);
+      ad5602bksz::set_dac_level_to_percent(ft260s, device, 0);
       //ad5602bksz::set_dac_level_to_percent(ft260s, device, 50);
-      ad5602bksz::set_dac_level_to_percent(ft260s, device, 100);
+      //ad5602bksz::set_dac_level_to_percent(ft260s, device, 100);
 
+      /*
       max11603eee::setup_adc(ft260s, device);
       max11603eee::read_adc(ft260s, device, max11603eee::cbf_channel_0);
       max11603eee::read_adc(ft260s, device, max11603eee::cbf_channel_1);
@@ -54,6 +54,14 @@ int main(int argc, char* argv[])
       max11603eee::read_adc(ft260s, device, max11603eee::cbf_channel_5);
       max11603eee::read_adc(ft260s, device, max11603eee::cbf_channel_6);
       max11603eee::read_adc(ft260s, device, max11603eee::cbf_channel_7);
+      */
+   #endif
+   #ifdef HPH_MNC_SHUTDOWN_EXECUTIBLE
+      hph::mnc::initialize_device_for_non_hid_i2c_and_gpio(ft260s, device);
+      hph::mnc::initialize_fan(ft260s, device);
+      hph::mnc::turn_fan_down(ft260s, device);
+      ad5602bksz::set_dac_level_to_percent(ft260s, device, 100);
+   #endif
    }
 
    return 0;

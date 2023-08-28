@@ -16,7 +16,12 @@ namespace hph
       void initialize_device_for_non_hid_i2c_and_gpio(ft260_interface &ft260s, uint8_t device_handle);
 
       void enable_on_fan(ft260_interface &ft260s, uint8_t device_handle);
+      void initialize_fan(ft260_interface &ft260s, uint8_t device_handle);
+      void turn_fan_up(ft260_interface &ft260s, uint8_t device_handle);
+      void turn_fan_down(ft260_interface &ft260s, uint8_t device_handle);
+
       void reset_ethernet_chip(ft260_interface &ft260s, uint8_t device_handle);
+
       void test_i2c(ft260_interface &ft260s, uint8_t device_handle);
    } // namespace mnc
 } // namespace hph

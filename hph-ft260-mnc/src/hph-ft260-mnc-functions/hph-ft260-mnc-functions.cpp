@@ -179,6 +179,21 @@ namespace hph
          ft260s.write_gpio(device_handle, na, la, nwnr, lwnr);
       }
 
+      void initialize_fan(ft260_interface &ft260s, uint8_t device_handle)
+      {
+         isl9122a::initialize_system_fan(ft260s, device_handle);
+      }
+
+      void turn_fan_up(ft260_interface &ft260s, uint8_t device_handle)
+      {
+         isl9122a::set_fan_to_percent(ft260s, device_handle, 50);
+      }
+
+      void turn_fan_down(ft260_interface &ft260s, uint8_t device_handle)
+      {
+         isl9122a::set_fan_to_percent(ft260s, device_handle, 0);
+      }
+
       void test_i2c(hph::ft260_interface &ft260s, uint8_t device_handle)
       {
          int result_size;
